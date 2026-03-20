@@ -1,0 +1,81 @@
+@model Identity.Application.DTOs.Email.VerifyEmailModel
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .header {
+            text-align: center;
+            background-color: #4CAF50;
+            padding: 10px;
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Xác thực tài khoản</h1>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong>@Model.Username</strong>,</p>
+            <p>Cảm ơn bạn đã đăng ký thành viên tại <strong>@Model.CompanyName</strong>.</p>
+            <p>Để hoàn tất quá trình đăng ký và kích hoạt tài khoản, vui lòng nhập mã xác thực gồm 6 chữ số dưới đây vào ứng dụng:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="display: inline-block; padding: 15px 30px; background-color: #ffffff; border: 2px dashed #16a34a; border-radius: 8px;">
+                    <h1 style="margin: 0; font-size: 36px; letter-spacing: 8px; color: #16a34a;">@Model.Token</h1>
+                </div>
+            </div>
+            <p style="text-align: center; color: #6b7280; font-size: 14px;">Mã xác thực này sẽ hết hạn sau 24 giờ.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="@Model.VerificationLink" class="button">Xác thực Email ngay</a>
+            </div>
+
+            <p>Nếu nút trên không hoạt động, bạn có thể copy đường link dưới đây và dán vào trình duyệt:</p>
+            <p><a href="@Model.VerificationLink">@Model.VerificationLink</a></p>
+
+            <p>Trân trọng,<br />Đội ngũ @Model.CompanyName</p>
+        </div>
+        <div class="footer">
+            <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+        </div>
+    </div>
+</body>
+</html>

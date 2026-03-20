@@ -1,0 +1,35 @@
+﻿
+namespace Shared.Domain
+{
+    public abstract class Entity<TId> : IEquatable<Entity<TId>>
+    {
+        public TId Id { get; protected set; } = default!;
+
+        private readonly List<IDomainEvent> _domainEvents = new();
+
+        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+        public void AddDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Add(domainEvent);
+        }
+
+        public void ClearDomainEvents()
+        {
+            _domainEvents.Clear();
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not Entity<TId> other) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (Id is null || Id.Equals(default)) return false;
+
+            return Id.Equals(other.Id);
+        }
+
+        public bool Equals(Entity<TId>? other) => Equals((object?)other);
+
+        public override int GetHashCode() => Id?.GetHashCode() ?? 0;
+    }
+}

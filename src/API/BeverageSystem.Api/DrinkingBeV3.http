@@ -1,0 +1,6 @@
+@DrinkingBeV3_HostAddress = http://localhost:5022
+
+GET {{DrinkingBeV3_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
