@@ -23,7 +23,10 @@
     <Project Path="src/Modules/Orders/Orders.Presentation/Orders.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Payments/">
+    <Project Path="src/Modules/Payments/Payments.Application/Payments.Application.csproj" />
     <Project Path="src/Modules/Payments/Payments.Domain/Payments.Domain.csproj" />
+    <Project Path="src/Modules/Payments/Payments.Infrastructure/Payments.Infrastructure.csproj" />
+    <Project Path="src/Modules/Payments/Payments.Presentation/Payments.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Stores/">
     <Project Path="src/Modules/Stores/Stores.Application/Stores.Application.csproj" />
