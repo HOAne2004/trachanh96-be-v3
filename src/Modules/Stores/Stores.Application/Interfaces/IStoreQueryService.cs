@@ -8,7 +8,6 @@ public interface IStoreQueryService
 {
     Task<PagedResult<StoreAdminListDto>> GetPagedAdminStoresAsync(
         string? searchTerm, StoreStatusEnum? status, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
-
     Task<StoreDetailDto?> GetStoreDetailAsync(Guid publicId, CancellationToken cancellationToken = default);
     Task<List<AreaResponseDto>> GetStoreAreasAsync(Guid storePublicId, CancellationToken cancellationToken = default);
     Task<TableQrResponseDto?> GetTableByQrTokenAsync(string token, CancellationToken cancellationToken = default);

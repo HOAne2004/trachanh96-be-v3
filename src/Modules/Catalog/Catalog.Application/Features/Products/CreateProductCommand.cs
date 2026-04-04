@@ -1,6 +1,7 @@
 ﻿using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
 using Catalog.Domain.Enums;
+using Shared.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Shared.Application.Interfaces;

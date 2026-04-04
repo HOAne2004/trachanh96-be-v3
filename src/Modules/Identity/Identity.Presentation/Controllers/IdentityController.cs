@@ -8,17 +8,17 @@ using System.Security.Claims;
 namespace BeverageSystem.Api.Controllers;
 
 [ApiController]
-[Route("api/identity/[controller]")]
-public class AuthController : ControllerBase
+[Route("api/identity")]
+public class IdentityController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public AuthController(IMediator mediator)
+    public IdentityController(IMediator mediator)
     {
         _mediator = mediator;
     }
 
-    [HttpPost("register")]
+    [HttpPost("users/register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
         // 1. Chỉ một dòng duy nhất: Đẩy command vào "ống nước" MediatR
@@ -32,7 +32,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    [HttpPost("login")]
+    [HttpPost("sessions")]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         var authResult = await _mediator.Send(command);
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize] 
-    [HttpGet("profile")]
+    [HttpGet("users/me")]
     public async Task<IActionResult> GetProfile()
     {
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -61,21 +61,21 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
-    [HttpPost("forgot-password")]
+    [HttpPost("users/forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
     {
         var result = await _mediator.Send(command);
         return Ok(new { Message = result });
     }
 
-    [HttpPost("reset-password")]
+    [HttpPost("users/reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
     {
         var result = await _mediator.Send(command);
         return Ok(new { Message = result });
     }
 
-    [HttpPost("verify-email")]
+    [HttpPost("users/verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
     {
         var result = await _mediator.Send(command);

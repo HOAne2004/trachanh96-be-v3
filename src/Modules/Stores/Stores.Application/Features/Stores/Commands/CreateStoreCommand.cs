@@ -64,7 +64,7 @@ namespace Stores.Application.Features.Stores.Commands
     public class CreateStoreCommandHandler : IRequestHandler<CreateStoreCommand, Result<Guid>>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork; // Inject UnitOfWork
+        private readonly IUnitOfWork _unitOfWork; 
 
         public CreateStoreCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
         {

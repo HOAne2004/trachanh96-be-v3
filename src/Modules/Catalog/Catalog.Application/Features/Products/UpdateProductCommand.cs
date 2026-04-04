@@ -5,6 +5,7 @@ using FluentValidation;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 
 namespace Catalog.Application.Features.Products;
 

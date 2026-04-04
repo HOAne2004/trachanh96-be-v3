@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Catalog.Presentation.Controllers;
 
 [ApiController]
-[Route("api/catalog/[controller]")]
+[Route("api/admin/catalog/products")]
 [Authorize (Roles = "Admin")]
 public class ProductsController : ControllerBase
 {
@@ -37,36 +37,7 @@ public class ProductsController : ControllerBase
         });
     }
 
-    [HttpGet("{id:guid}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetProductByPublicId(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _sender.Send(new GetProductByIdQuery(id), cancellationToken);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(new { Message = result.Error });
-        }
-
-        var value = result.GetType().GetProperty("Value")?.GetValue(result);
-        return Ok(value ?? (object)result);
-    }
-
-    [HttpGet("{slug}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetProductBySlug(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _sender.Send(new GetProductByIdQuery(id), cancellationToken);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(new { Message = result.Error });
-        }
-
-        var value = result.GetType().GetProperty("Value")?.GetValue(result);
-        return Ok(value ?? (object)result);
-    }
-
+    
     [HttpPut ("{id:guid}")]
     public async Task<IActionResult> UpdateProduct(Guid publicId, [FromBody] UpdateProductCommand command, CancellationToken cancellationToken)
     {

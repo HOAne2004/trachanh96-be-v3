@@ -1,7 +1,4 @@
 ﻿
-using Catalog.Domain.Enums;
-using MediatR;
-using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
 
 namespace Catalog.Application.DTOs

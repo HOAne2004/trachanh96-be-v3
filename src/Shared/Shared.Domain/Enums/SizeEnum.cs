@@ -1,5 +1,5 @@
 ﻿
-namespace Catalog.Domain.Enums
+namespace Shared.Domain.Enums
 {
     public enum SizeEnum
     {

@@ -8,7 +8,7 @@ using Stores.Domain.Enums;
 namespace Stores.Presentation.Controllers;
 
 [ApiController]
-[Route("api/admin/stores/[controller]")] 
+[Route("api/admin/stores")] 
 [Authorize(Roles = "Admin")]
 public class StoresController : ControllerBase
 {

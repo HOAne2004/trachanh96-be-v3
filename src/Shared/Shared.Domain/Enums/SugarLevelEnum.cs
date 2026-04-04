@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Catalog.Domain.Enums
+﻿
+namespace Shared.Domain.Enums
 {
     public enum SugarLevelEnum : short
     {

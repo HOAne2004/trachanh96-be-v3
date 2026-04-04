@@ -2,8 +2,10 @@ using BeverageSystem.Api.Extensions;
 using Identity.Infrastructure;
 using Catalog.Infrastructure;
 using Shared.Infrastructure;
+using Shared.Application;
 using Catalog.Application;
 using Stores.Infrastructure;
+using Orders.Infrastructure;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +26,7 @@ builder.Services.AddProblemDetails();
 
 // Đăng ký Shared Infrastructure (Email, Interceptors...)
 builder.Services.AddSharedInfrastructure(builder.Configuration);
-
+builder.Services.AddSharedApplication();
 // 2. ĐĂNG KÝ CÁC MODULES
 builder.Services.AddIdentityModule(builder.Configuration);
 
@@ -32,6 +34,8 @@ builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCatalogApplication();
 
 builder.Services.AddStoreInfrastructure(builder.Configuration);
+
+builder.Services.AddOrdersInfrastructure(builder.Configuration);
 // ==========================================================
 
 var app = builder.Build();

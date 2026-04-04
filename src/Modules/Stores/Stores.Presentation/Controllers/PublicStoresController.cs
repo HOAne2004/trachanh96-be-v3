@@ -7,7 +7,7 @@ using Stores.Application.Features.Tables.Queries;
 namespace Stores.Presentation.Controllers;
 
 [ApiController]
-[Route("api/public")]
+[Route("api/stores")]
 [AllowAnonymous]
 public class PublicStoresController : ControllerBase
 {

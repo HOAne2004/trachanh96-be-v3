@@ -1,5 +1,5 @@
 ﻿using Shared.Domain.ValueObjects;
-using Catalog.Domain.Enums;
+using Shared.Domain.Enums;
 
 namespace Catalog.Domain.Entities;
 

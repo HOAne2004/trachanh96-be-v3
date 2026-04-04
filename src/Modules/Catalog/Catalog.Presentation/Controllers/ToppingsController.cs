@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Catalog.Presentation.Controllers
 {
     [ApiController]
-    [Route("api/catalog/[controller]")]
+    [Route("api/admin/catalog/toppings")]
     [Authorize(Roles = "Admin")]
     public class ToppingsController : ControllerBase
     {

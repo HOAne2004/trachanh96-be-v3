@@ -10,7 +10,7 @@ public class StoreDbContext : DbContext
     }
 
     // Các DbSet đại diện cho các bảng
-    public DbSet<Domain.Entities.Store> Stores => Set<Domain.Entities.Store>();
+    public DbSet<Store> Stores => Set<Store>();
     public DbSet<StoreOperatingHour> StoreOperatingHours => Set<StoreOperatingHour>();
     public DbSet<Area> Areas => Set<Area>();
     public DbSet<Table> Tables => Set<Table>();
