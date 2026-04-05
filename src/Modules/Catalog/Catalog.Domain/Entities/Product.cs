@@ -1,7 +1,8 @@
-﻿using Shared.Domain;
-using Catalog.Domain.Enums; 
+﻿using Catalog.Domain.Enums;
 using Shared.Domain.Enums;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.SeedWork;
+using Shared.Domain.Interfaces;
 
 namespace Catalog.Domain.Entities;
 

@@ -1,4 +1,5 @@
-﻿using Shared.Domain;
+﻿using Shared.Domain.Interfaces;
+using Shared.Domain.SeedWork;
 
 namespace Stores.Domain.Entities;
 

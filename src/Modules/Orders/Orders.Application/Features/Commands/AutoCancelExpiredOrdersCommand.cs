@@ -22,7 +22,7 @@ public class AutoCancelExpiredOrdersCommandHandler : IRequestHandler<AutoCancelE
     public async Task<Result<int>> Handle(AutoCancelExpiredOrdersCommand request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var paymentTimeout = now.AddMinutes(-10); // Quá 10' không quét QR
+        var paymentTimeout = now.AddMinutes(-15); // Quá 15' không quét QR
         var pendingTimeout = now.AddMinutes(-5); // Quá 5' quán không bấm nhận đơn
 
         // CHỈ quét các đơn đã Checkout (AwaitingPayment) hoặc đã trả tiền (Pending)

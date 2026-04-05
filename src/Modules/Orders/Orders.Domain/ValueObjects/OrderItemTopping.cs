@@ -1,4 +1,4 @@
-﻿using Shared.Domain;
+﻿using Shared.Domain.SeedWork;
 using Shared.Domain.ValueObjects;
 
 namespace Orders.Domain.ValueObjects;

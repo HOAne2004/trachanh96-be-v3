@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Text;
+using Shared.Domain.SeedWork;
 
 namespace Shared.Domain.ValueObjects;
 

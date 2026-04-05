@@ -1,4 +1,4 @@
-﻿namespace Shared.Domain;
+﻿namespace Shared.Domain.SeedWork;
 
 public abstract class ValueObject : IEquatable<ValueObject>
 {

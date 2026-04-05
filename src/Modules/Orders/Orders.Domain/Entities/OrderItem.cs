@@ -1,8 +1,8 @@
 ﻿using Orders.Domain.ValueObjects;
-using Shared.Domain;
 using Shared.Domain.ValueObjects;
 using Shared.Domain.Enums;
 using System.Diagnostics.CodeAnalysis;
+using Shared.Domain.SeedWork;
 
 namespace Orders.Domain.Entities;
 

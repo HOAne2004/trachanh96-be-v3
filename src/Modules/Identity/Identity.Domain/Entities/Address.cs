@@ -1,8 +1,9 @@
-﻿using Shared.Domain;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using Identity.Domain.ValueObjects;
+using Shared.Domain.SeedWork;
+using Shared.Domain.Interfaces;
 
 namespace Identity.Domain.Entities; 
 

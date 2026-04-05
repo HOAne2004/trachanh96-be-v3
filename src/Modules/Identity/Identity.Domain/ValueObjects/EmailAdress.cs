@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using Shared.Domain;
+using Shared.Domain.SeedWork;
 
 namespace Identity.Domain.ValueObjects;
 

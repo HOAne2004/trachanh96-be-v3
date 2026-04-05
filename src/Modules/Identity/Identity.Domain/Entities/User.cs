@@ -1,6 +1,7 @@
 ﻿using Identity.Domain.Enums;
 using Identity.Domain.ValueObjects;
-using Shared.Domain;
+using Shared.Domain.Interfaces;
+using Shared.Domain.SeedWork;
 using System.Linq;
 using System.Net.Mail;
 using System.Security.Cryptography;

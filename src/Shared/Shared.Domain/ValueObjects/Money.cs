@@ -1,4 +1,6 @@
-﻿namespace Shared.Domain.ValueObjects;
+﻿using Shared.Domain.SeedWork;
+
+namespace Shared.Domain.ValueObjects;
 
 public sealed class Money : ValueObject
 {

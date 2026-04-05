@@ -1,5 +1,5 @@
-﻿using Shared.Domain;
-using Shared.Domain.Exceptions;
+﻿using Shared.Domain.Exceptions;
+using Shared.Domain.SeedWork;
 
 namespace Orders.Domain.ValueObjects;
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Shared.Domain;
+using Shared.Domain.Interfaces;
 
 namespace Shared.Infrastructure.Interceptors;
 

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Orders.Infrastructure.Database;
-using Shared.Domain;
+using Shared.Domain.Interfaces;
 using Shared.Infrastructure.Outbox;
 
 namespace Orders.Infrastructure.BackgroundJobs

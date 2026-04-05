@@ -1,9 +1,10 @@
 ﻿using Orders.Domain.Enums;
 using Orders.Domain.Events;
 using Orders.Domain.ValueObjects;
-using Shared.Domain;
 using Shared.Domain.Enums;
 using Shared.Domain.Exceptions;
+using Shared.Domain.Interfaces;
+using Shared.Domain.SeedWork;
 using Shared.Domain.ValueObjects;
 
 namespace Orders.Domain.Entities;

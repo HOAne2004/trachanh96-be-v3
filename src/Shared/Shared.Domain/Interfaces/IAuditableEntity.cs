@@ -1,4 +1,4 @@
-﻿namespace Shared.Domain
+﻿namespace Shared.Domain.Interfaces
 {
     public interface IAuditableEntity
     {

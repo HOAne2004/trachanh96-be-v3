@@ -1,5 +1,6 @@
-﻿
-namespace Shared.Domain
+﻿using Shared.Domain.Interfaces;
+
+namespace Shared.Domain.SeedWork
 {
     public abstract class Entity<TId> : IEquatable<Entity<TId>>
     {
@@ -23,6 +24,7 @@ namespace Shared.Domain
         {
             if (obj is not Entity<TId> other) return false;
             if (ReferenceEquals(this, other)) return true;
+            if (GetType() != other.GetType()) return false;
             if (Id is null || Id.Equals(default)) return false;
 
             return Id.Equals(other.Id);

@@ -1,4 +1,4 @@
-﻿using Shared.Domain;
+﻿using Shared.Domain.Interfaces;
 
 namespace Orders.Domain.Events;
 

@@ -1,4 +1,5 @@
-﻿using Shared.Domain;
+﻿using Shared.Domain.Interfaces;
+using Shared.Domain.SeedWork;
 using Shared.Domain.ValueObjects;
 using Stores.Domain.Enums;
 
