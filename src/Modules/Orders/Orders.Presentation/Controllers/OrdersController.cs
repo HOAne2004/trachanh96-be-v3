@@ -9,8 +9,8 @@ using System.Security.Claims;
 namespace Orders.Presentation.Controllers;
 
 [ApiController]
-[Route("api/orders")] 
-[Authorize] 
+[Route("api/orders")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly ISender _sender;
@@ -80,7 +80,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("history")]
-    public async Task<IActionResult> GetCustomerOrderHistory([FromQuery] OrderStatusEnum? status, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetCustomerOrderHistory([FromQuery] List<OrderStatusEnum>? status, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var customerId = GetUserIdFromToken();
         if (customerId == null) return Unauthorized();

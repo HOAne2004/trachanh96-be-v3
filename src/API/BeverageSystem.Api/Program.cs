@@ -6,6 +6,7 @@ using Shared.Application;
 using Catalog.Application;
 using Stores.Infrastructure;
 using Orders.Infrastructure;
+using Payments.Infrastructure;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +37,9 @@ builder.Services.AddCatalogApplication();
 builder.Services.AddStoreInfrastructure(builder.Configuration);
 
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
+
+builder.Services.AddPaymentsInfrastructure(builder.Configuration);
+
 // ==========================================================
 
 var app = builder.Build();

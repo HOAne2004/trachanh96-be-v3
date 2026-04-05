@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Interfaces;
 using Shared.Infrastructure.Interceptors;
+using Shared.Infrastructure.Outbox;
 using System.Net.Mail;
 
 namespace Shared.Infrastructure;
@@ -11,7 +12,7 @@ public static class DependencyInjection
     public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<AuditableEntityInterceptor>();
-
+        services.AddScoped<InsertOutboxMessagesInterceptor>();
         // CẤU HÌNH FLUENT EMAIL
         var emailSettings = configuration.GetSection("EmailSettings");
         services.AddFluentEmail(emailSettings["DefaultFromEmail"] ?? "admin@example.com")

@@ -32,7 +32,7 @@ namespace Orders.Infrastructure
             });
 
             services.AddScoped<IOrderRepository, OrderRepository>();
-            // services.AddScoped<IOrderQueryService, OrderQueryService>();
+            //services.AddScoped<IOrderQueryService, OrderQueryService>();
             services.AddHostedService<ProcessOutboxMessagesJob>();
 
             return services;
