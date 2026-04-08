@@ -79,7 +79,14 @@ public class PaymentTransaction : AggregateRoot<Guid>, IAuditableEntity
 
     public static PaymentTransaction Create(Guid orderId, string orderCode, decimal amount, string currency, PaymentMethodEnum method, Guid idempotencyKey)
     {
-        return new PaymentTransaction(orderId, orderCode, amount, currency, method, idempotencyKey);
+        // 1. Gọi private constructor để chạy các logic Validation (amount > 0, VND...)
+        var transaction = new PaymentTransaction(orderId, orderCode, amount, currency, method, idempotencyKey);
+
+        // 2. Ghi nhận Event (Giống Order)
+        // Hiện tại Payment mới ở trạng thái Pending, nếu bạn có PaymentCreatedDomainEvent thì bắn ở đây.
+        // Ví dụ: transaction.AddDomainEvent(new PaymentCreatedDomainEvent(transaction.Id, orderId));
+
+        return transaction;
     }
 
     // --- CÁC HÀM BEHAVIOR (Đã được review và chuẩn hóa ở trên) ---

@@ -3,6 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payments.Infrastructure.BackgroundJobs;
 using Payments.Infrastructure.Database;
+using Payments.Infrastructure.Database.Configurations;
+using Payments.Infrastructure.Services;
+using Payments.Infrastructure.Repositories;
+using Payments.Application.Interfaces;
 using Shared.Infrastructure.Interceptors;
 using Shared.Infrastructure.Outbox;
 
@@ -31,8 +35,10 @@ public static class DependencyInjection
         services.AddHostedService<PaymentOutboxWorker>();
 
         // Tương lai: Đăng ký Repository, VNPayService...
-        // services.AddScoped<IPaymentRepository, PaymentRepository>();
+         services.AddScoped<IPaymentRepository, PaymentRepository>();
 
+        services.Configure<VnPayConfig>(configuration.GetSection(VnPayConfig.ConfigName));
+        services.AddScoped<IVnPayService, VnPayService>();
         return services;
     }
 }

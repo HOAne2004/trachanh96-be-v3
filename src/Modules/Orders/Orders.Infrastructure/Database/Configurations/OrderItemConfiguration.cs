@@ -9,10 +9,23 @@ namespace Orders.Infrastructure.Database.Configurations
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
             builder.ToTable("OrderItems", "orders");
+
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.ProductName).HasMaxLength(255).IsRequired();
-            builder.Property(x => x.SizeName).HasMaxLength(50).IsRequired();
+
+            builder.Property(x => x.SizeName)
+               .HasConversion<string>()
+               .HasMaxLength(20);
+
+            builder.Property(x => x.IceLevel)
+               .HasConversion<string>()
+               .HasMaxLength(20);
+
+            builder.Property(x => x.SugarLevel)
+                   .HasConversion<string>()
+                   .HasMaxLength(20);
+
             builder.Property(x => x.Notes).HasMaxLength(500);
 
             // 1. Dùng OwnsOne thay cho ComplexProperty (Tương thích mọi version EF Core)

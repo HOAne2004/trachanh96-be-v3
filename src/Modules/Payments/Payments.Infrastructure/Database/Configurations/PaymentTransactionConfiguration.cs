@@ -21,7 +21,6 @@ public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentT
         // 4. BẢO VỆ 2: Khóa lạc quan (Optimistic Concurrency)
         // Báo cho EF Core biết RowVersion dùng để chặn việc ghi đè dữ liệu cùng lúc
         builder.Property(x => x.RowVersion)
-               .IsRowVersion()
                .IsConcurrencyToken();
 
         // 5. Tối ưu kiểu dữ liệu (Best Practice cho Production DB)

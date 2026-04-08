@@ -7,10 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Repositories\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<!-- 👇 Đổi dòng này từ 10.0.3 thành 10.0.4 -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
 
