@@ -26,7 +26,6 @@ namespace Orders.Infrastructure.Database.Configurations
 
             // 3. Concurrency Token (Chống Race Condition)
             builder.Property(x => x.RowVersion)
-                   .IsRowVersion()
                    .IsRequired();
 
             // 4. Map Value Object Money bằng ComplexProperty (Tính năng mới chuẩn DDD của EF Core)
@@ -46,6 +45,14 @@ namespace Orders.Infrastructure.Database.Configurations
             {
                 p.Property(m => m.Amount).HasColumnName("FinalTotalAmount").HasPrecision(18, 2);
                 p.Property(m => m.Currency).HasColumnName("FinalTotalCurrency").HasMaxLength(3);
+            });
+
+            builder.OwnsOne(x => x.DeliveryDetails);
+
+            builder.OwnsOne(x => x.ShippingFee, p =>
+            {
+                p.Property(m => m.Amount).HasColumnName("ShippingFeeAmount").HasPrecision(18, 2);
+                p.Property(m => m.Currency).HasColumnName("ShippingFeeCurrency").HasMaxLength(3);
             });
 
             // 5. Cấu hình Relationship
