@@ -1,49 +1,34 @@
-﻿using Identity.Application.Features.Auth;
-using Identity.Application.Features.Users;
-using MediatR;
+﻿using Identity.Application.Features.Auth.Commands;
+using Identity.Application.Features.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
 using System.Security.Claims;
 
-namespace BeverageSystem.Api.Controllers;
+namespace Identity.Presentation.Controllers;
 
-[ApiController]
 [Route("api/identity")]
-public class IdentityController : ControllerBase
+public class IdentityController : BaseApiController 
 {
-    private readonly IMediator _mediator;
-
-    public IdentityController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
 
     [HttpPost("users/register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
-        // 1. Chỉ một dòng duy nhất: Đẩy command vào "ống nước" MediatR
-        var userPublicId = await _mediator.Send(command);
-
-        // 2. Trả về kết quả thành công
-        return Ok(new
-        {
-            Message = "Đăng ký tài khoản thành công!",
-            UserId = userPublicId
-        });
+        // Giả định RegisterUserCommand trả về Result<Guid>
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Đăng ký tài khoản thành công!");
     }
 
     [HttpPost("sessions")]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        var authResult = await _mediator.Send(command);
-        return Ok(new
-        {
-            Message = "Đăng nhập thành công!",
-            Data = authResult
-        });
+        // Giả định LoginCommand trả về Result<AuthResultDto>
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Đăng nhập thành công!");
     }
 
-    [Authorize] 
+    [Authorize]
     [HttpGet("users/me")]
     public async Task<IActionResult> GetProfile()
     {
@@ -51,34 +36,34 @@ public class IdentityController : ControllerBase
 
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var publicId))
         {
-            return Unauthorized(new { Message = "Token không hợp lệ." });
+            // Trả về ErrorResponse chuẩn hóa thay vì object vô danh
+            return Unauthorized(new ErrorResponse("INVALID_TOKEN", "Token không hợp lệ hoặc đã hết hạn."));
         }
 
-        // Đẩy Query xuống MediatR
-        var query = new GetProfileQuery(publicId);
-        var response = await _mediator.Send(query);
-
-        return Ok(response);
+        // Giả định GetProfileQuery trả về Result<UserProfileDto>
+        var result = await Mediator.Send(new GetProfileQuery(publicId));
+        return HandleResult(result);
     }
 
     [HttpPost("users/forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
     {
-        var result = await _mediator.Send(command);
-        return Ok(new { Message = result });
+        // Giả định ForgotPasswordCommand trả về Result (không có T)
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Đã gửi email khôi phục mật khẩu. Vui lòng kiểm tra hộp thư.");
     }
 
     [HttpPost("users/reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
     {
-        var result = await _mediator.Send(command);
-        return Ok(new { Message = result });
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Khôi phục mật khẩu thành công!");
     }
 
     [HttpPost("users/verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
     {
-        var result = await _mediator.Send(command);
-        return Ok(new { Message = result });
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Xác thực email thành công!");
     }
 }

@@ -38,9 +38,5 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
         // 5. BỎ QUA Computed Property
         // Báo cho EF Core biết FullAddress chỉ dùng trong C#, không được tạo cột trong DB
         builder.Ignore(x => x.FullAddress);
-
-        // 6. Global Query Filter (Tự động lọc Xóa Mềm)
-        // Bất kỳ câu query nào truy vấn bảng Address đều tự động thêm điều kiện "WHERE IsDeleted = false"
-        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }
