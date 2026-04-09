@@ -1,4 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿/// <summary>
+/// [DOMAIN VALUE OBJECT: SLUG / ĐƯỜNG DẪN SEO]
+/// Chức năng: Đảm bảo mọi đường dẫn sinh ra đều hợp lệ, an toàn cho URL và thân thiện với SEO.
+/// Lợi ích:
+/// - Gom tụ (Encapsulate) toàn bộ logic Regex, chuẩn hóa Unicode, loại bỏ dấu tiếng Việt vào một nơi duy nhất.
+/// - Sử dụng RegexOptions.Compiled để tối ưu hiệu năng cho hệ thống Production.
+/// </summary>
+
+using System.Text.RegularExpressions;
 using System.Text;
 using Shared.Domain.SeedWork;
 

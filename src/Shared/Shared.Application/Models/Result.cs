@@ -1,4 +1,17 @@
-﻿namespace Shared.Application.Models;
+﻿/// <summary>
+/// [MÔ HÌNH: RESULT PATTERN / QUẢN LÝ KẾT QUẢ NỘI BỘ]
+/// Chức năng: Đóng gói kết quả thực thi của các Use Case/Handler thay vì ném Exception tràn lan.
+/// 
+/// Cách hoạt động:
+/// - Lớp Result: Dành cho các thao tác KHÔNG trả về dữ liệu (Ví dụ: DeleteItemCommand).
+/// - Lớp Result<T>: Dành cho các thao tác CÓ trả về dữ liệu (Ví dụ: GetItemQuery trả về ItemDto).
+/// - Có cơ chế rào chắn (Guard Clause) trong Constructor: Đảm bảo tính nhất quán (Đã Success thì cấm có Error message, đã Failure thì bắt buộc phải có Error).
+/// 
+/// Sử dụng: Làm kiểu trả về (Return type) cho 100% các IRequestHandler trong MediatR ở tầng Application. 
+/// Ở tầng API, Controller sẽ dựa vào thuộc tính IsSuccess để quyết định trả về HTTP 200 (OK) hay 400/404 (Lỗi).
+/// </summary>
+
+namespace Shared.Application.Models;
 
 public class Result
 {

@@ -1,4 +1,13 @@
-﻿using FluentValidation;
+﻿/// <summary>
+/// [PIPELINE BEHAVIOR: XỬ LÝ KIỂM TRA DỮ LIỆU ĐẦU VÀO]
+/// Chức năng: Chặn các Request không hợp lệ trước khi chúng lọt vào Handler.
+/// Cách hoạt động: 
+/// - Tự động quét tìm tất cả các IValidator<TRequest> (FluentValidation) đã đăng ký.
+/// - Chạy kiểm tra đồng loạt. Nếu có lỗi, tự động gom lỗi lại và trả về Result.Failure (hoặc ném Exception) mà không chạy Handler.
+/// Sử dụng: Áp dụng tự động cho mọi Command/Query. Giúp Handler sạch sẽ, không cần viết code If-Else validate tay.
+/// </summary>
+
+using FluentValidation;
 using MediatR;
 using Shared.Application.Models; 
 

@@ -1,4 +1,14 @@
-﻿namespace Shared.Domain.SeedWork;
+﻿/// <summary>
+/// [DDD SEEDWORK: VALUE OBJECT]
+/// Chức năng: Lớp nền tảng cho các Đối tượng Giá trị.
+/// Đặc điểm:
+/// - Không có danh tính (No Identity - không có Id).
+/// - Tính bất biến (Immutable): Khi đã tạo ra thì không được sửa (set). Muốn đổi giá trị thì phải tạo một Object mới.
+/// - So sánh theo giá trị (Structural Equality): Hai Value Object bằng nhau khi TẤT CẢ các thuộc tính (components) của chúng bằng nhau.
+/// Sử dụng: Triển khai hàm GetEqualityComponents để liệt kê các thuộc tính cần đem ra so sánh.
+/// </summary>
+
+namespace Shared.Domain.SeedWork;
 
 public abstract class ValueObject : IEquatable<ValueObject>
 {

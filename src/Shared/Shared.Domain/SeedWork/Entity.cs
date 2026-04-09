@@ -1,4 +1,13 @@
-﻿using Shared.Domain.Interfaces;
+﻿/// <summary>
+/// [DDD SEEDWORK: BASE ENTITY]
+/// Chức năng: Lớp nền tảng cho mọi Thực thể (Entity) trong hệ thống.
+/// Đặc điểm:
+/// - Tính định danh (Identity): Hai Entity được coi là giống nhau NẾU VÀ CHỈ NẾU chúng có cùng Id, bất kể các thuộc tính khác có khác nhau.
+/// - Chứa danh sách Domain Events: Nơi lưu trữ tạm thời các sự kiện nghiệp vụ (VD: OrderCreatedEvent) trước khi được UnitOfWork xuất bản (publish) ra toàn hệ thống.
+/// Sử dụng: Kế thừa lớp này cho các đối tượng có vòng đời và cần theo dõi bằng Id (VD: OrderItem, ProductVariant...).
+/// </summary>
+
+using Shared.Domain.Interfaces;
 
 namespace Shared.Domain.SeedWork
 {

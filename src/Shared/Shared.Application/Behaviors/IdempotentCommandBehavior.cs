@@ -1,4 +1,14 @@
-﻿using MediatR;
+﻿/// <summary>
+/// [PIPELINE BEHAVIOR: CHỐNG XỬ LÝ TRÙNG LẶP (IDEMPOTENCY)]
+/// Chức năng: Ngăn chặn tình trạng gửi đúp (Double-Submit) hoặc xử lý lại một Command đã thành công.
+/// Cách hoạt động:
+/// - Kiểm tra IdempotencyKey của request trong Redis Cache.
+/// - Nếu key đã tồn tại -> Ném lỗi từ chối xử lý (tránh trừ tiền 2 lần, tạo 2 đơn hàng).
+/// - Nếu key chưa tồn tại -> Lưu key vào Cache (giữ 24h) và cho phép đi tiếp vào Handler.
+/// Sử dụng: Áp dụng cho các Command implement interface IIdempotentCommand (thường là Thanh toán, Trừ kho, Tạo đơn).
+/// </summary>
+
+using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Shared.Application.Interfaces;
 

@@ -1,4 +1,16 @@
-﻿using FluentEmail.Core;
+﻿/// <summary>
+/// [INFRASTRUCTURE SERVICE: GIAO TIẾP VỚI MÁY CHỦ EMAIL]
+/// Chức năng: Thực thi IEmailService bằng thư viện FluentEmail để gửi mail thực tế.
+/// 
+/// Cách hoạt động:
+/// - Đọc các file Razor Template (.cshtml) từ thư mục Templates để tạo giao diện HTML cho Email.
+/// - Bơm dữ liệu (VD: Username, mã OTP) vào Template.
+/// - Gọi SMTP Server để gửi đi và ghi Log kết quả (Thành công/Lỗi).
+/// 
+/// Sử dụng: Tầng Application sẽ inject IEmailService để gọi. Tầng Infra này đảm nhiệm phần "tay chân" dơ bẩn (I/O, Networking).
+/// </summary>
+
+using FluentEmail.Core;
 using Shared.Application.DTOs.Email;
 using Shared.Application.Interfaces;
 using Microsoft.Extensions.Logging;

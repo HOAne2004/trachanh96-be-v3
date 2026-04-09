@@ -1,4 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿/// <summary>
+/// [EF CORE INTERCEPTOR: TỰ ĐỘNG THEO DÕI THỜI GIAN & XÓA MỀM]
+/// Chức năng: Tự động hóa các thao tác lặp đi lặp lại trước khi dữ liệu được lưu vào Database.
+/// 
+/// Cách hoạt động:
+/// 1. Auto-Audit: Kiểm tra các Entity implement IAuditableEntity. Tự động gán CreatedAt khi thêm mới (Added), và UpdatedAt khi cập nhật (Modified).
+/// 2. Soft-Delete (Xóa mềm): Bắt các lệnh xóa (Deleted) đối với Entity implement ISoftDeletableEntity. Ép nó chuyển về trạng thái cập nhật (Modified) và đánh dấu IsDeleted = true thay vì xóa vĩnh viễn khỏi DB.
+/// 
+/// Sử dụng: Đăng ký Interceptor này vào DbContextOptionsBuilder trong hàm cấu hình DbContext của dự án. Không cần viết code cập nhật thời gian thủ công ở các Handler nữa.
+/// </summary>
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Shared.Domain.Interfaces;
 

@@ -1,4 +1,14 @@
-﻿using MediatR;
+﻿/// <summary>
+/// [PIPELINE BEHAVIOR: QUẢN LÝ TRANSACTION TỰ ĐỘNG]
+/// Chức năng: Tự động gom các thao tác Database vào một Transaction (All-or-Nothing).
+/// Cách hoạt động:
+/// - Cho phép Handler thực thi logic nghiệp vụ (thêm, sửa, xóa vào DbContext).
+/// - Nhận kết quả từ Handler. Nếu kết quả là LỖI (Result.IsSuccess == false), KHÔNG GỌI SaveChanges.
+/// - Nếu kết quả THÀNH CÔNG, tự động gọi _unitOfWork.SaveChangesAsync() để commit dữ liệu vào DB.
+/// Sử dụng: Áp dụng tự động cho mọi Request. Giúp loại bỏ code Boilerplate (SaveChanges) rải rác trong các Handlers.
+/// </summary>
+
+using MediatR;
 using Shared.Application.Interfaces; 
 using Shared.Application.Models;
 namespace Shared.Application.Behaviors;

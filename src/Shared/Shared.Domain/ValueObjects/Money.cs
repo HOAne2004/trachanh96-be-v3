@@ -1,4 +1,13 @@
-﻿using Shared.Domain.SeedWork;
+﻿/// <summary>
+/// [DOMAIN VALUE OBJECT: TIỀN TỆ]
+/// Chức năng: Gói gọn logic xử lý tiền bạc, tránh lỗi "Primitive Obsession" (chỉ dùng kiểu decimal thuần túy).
+/// Lợi ích:
+/// - Đảm bảo tiền không bao giờ bị âm khi khởi tạo.
+/// - Tự động làm tròn theo quy tắc tiền tệ (VND không có số thập phân).
+/// - Khóa chặt logic tính toán: Quăng lỗi (Exception) ngay lập tức nếu cố tình cộng/trừ hai loại tiền tệ khác nhau (VND và USD).
+/// </summary>
+
+using Shared.Domain.SeedWork;
 
 namespace Shared.Domain.ValueObjects;
 

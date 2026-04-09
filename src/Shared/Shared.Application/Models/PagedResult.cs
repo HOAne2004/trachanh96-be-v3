@@ -1,4 +1,17 @@
-﻿namespace Shared.Application.Models;
+﻿/// <summary>
+/// [MÔ HÌNH: PHÂN TRANG / PAGINATION WRAPPER]
+/// Chức năng: Đóng gói danh sách dữ liệu (List) kèm theo siêu dữ liệu (metadata) phân trang.
+/// 
+/// Cách hoạt động:
+/// - Chứa danh sách dữ liệu thực tế (Items) và thông số yêu cầu (TotalCount, PageIndex, PageSize).
+/// - Tự động tính toán các thông số phụ trợ một cách thông minh (TotalPages, HasPreviousPage, HasNextPage) dựa vào số liệu thực tế.
+/// - Sử dụng thuộc tính 'init' để đảm bảo an toàn thread (thread-safe) và tính bất biến sau khi khởi tạo.
+/// 
+/// Sử dụng: Dùng làm kiểu dữ liệu trả về cho các Query lấy danh sách dạng Result<PagedResult<ProductDto>>. 
+/// Rất khớp với các UI Component dạng DataGrid hoặc Table ở Frontend Vue.js.
+/// </summary>
+
+namespace Shared.Application.Models;
 
 public class PagedResult<T>
 {

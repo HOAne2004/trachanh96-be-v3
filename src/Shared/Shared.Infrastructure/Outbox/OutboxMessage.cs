@@ -1,4 +1,13 @@
-﻿// lưu trữ các Domain Events (những "sự thật đã xảy ra trong quá khứ") dưới dạng chuỗi JSON.
+﻿/// <summary>
+/// [ENTITY: HỘP THƯ ĐI (OUTBOX MESSAGE)]
+/// Chức năng: Lưu trữ các Domain Events dưới dạng chuỗi JSON trong Database để chờ được xử lý ở chế độ nền (Background).
+/// 
+/// Cách hoạt động:
+/// - Content: Chứa toàn bộ object Event đã bị JSON hóa.
+/// - ProcessedOnUtc: Đánh dấu thời điểm Background Job đã xử lý (VD: Gửi mail) thành công thư này.
+/// - Error: Nếu Background Job gửi mail lỗi 3 lần, nó sẽ lưu nguyên nhân lỗi vào đây để IT dễ debug.
+/// </summary>
+
 namespace Shared.Infrastructure.Outbox
 {
     public class OutboxMessage

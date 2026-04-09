@@ -1,9 +1,13 @@
-﻿namespace Shared.Domain.Exceptions;
-
-/// <summary>
-/// Exception độc quyền dành riêng cho tầng Domain.
-/// Chỉ được ném ra khi vi phạm các Invariants (Quy tắc toàn vẹn nghiệp vụ cốt lõi).
+﻿/// <summary>
+/// [DOMAIN EXCEPTION: LỖI NGHIỆP VỤ LÕI]
+/// Chức năng: Exception độc quyền dành riêng cho tầng Domain.
+/// Đặc điểm: 
+/// - CHỈ ĐƯỢC ném ra (throw) bên trong các class Entity/Aggregate Root/Value Object khi vi phạm các quy tắc nghiệp vụ cốt lõi (Invariants).
+/// - Ví dụ: Ném ra khi cố gắng "Hủy" một Đơn hàng đã ở trạng thái "Giao thành công".
+/// - GlobalExceptionHandler ở tầng API sẽ bắt lỗi này và tự động chuyển thành HTTP 400 Bad Request cho Frontend.
 /// </summary>
+
+namespace Shared.Domain.Exceptions;
 public class DomainException : Exception
 {
     // Có thể mở rộng thêm mã lỗi (ErrorCode) nếu dự án cần đa ngôn ngữ (i18n) sau này
