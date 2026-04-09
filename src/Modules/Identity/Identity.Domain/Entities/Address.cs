@@ -7,7 +7,7 @@ using Shared.Domain.Interfaces;
 
 namespace Identity.Domain.Entities; 
 
-public class Address : Entity<int>, IAuditableEntity, ISoftDeletableEntity
+public class Address : Entity<int>, IAuditableEntity
 {
     public string RecipientName { get; private set; }
     public PhoneNumber RecipientPhone { get; private set; }
@@ -27,8 +27,6 @@ public class Address : Entity<int>, IAuditableEntity, ISoftDeletableEntity
     // --- Tự động quản lý bởi Interceptor ---
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
 
     protected Address()
     {
@@ -85,8 +83,5 @@ public class Address : Entity<int>, IAuditableEntity, ISoftDeletableEntity
     internal void SetAsDefault() => IsDefault = true;
     internal void RemoveDefault() => IsDefault = false;
 
-    internal void MarkAsDeleted()
-    {
-        IsDeleted = true;
-    }
+
 }

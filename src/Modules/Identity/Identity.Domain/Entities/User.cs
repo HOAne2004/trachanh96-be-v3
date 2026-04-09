@@ -3,9 +3,7 @@ using Identity.Domain.ValueObjects;
 using Shared.Domain.Interfaces;
 using Shared.Domain.SeedWork;
 using System.Linq;
-using System.Net.Mail;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace Identity.Domain.Entities;
 
@@ -33,7 +31,7 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
     public string? ResetPasswordToken { get; private set; }
     public DateTime? ResetPasswordTokenExpiryTime { get; private set; }
 
-    // --- Audit & Soft Delete (Tự động quản lý bởi Interceptor) ---
+    // --- Audit & Soft Delete (Chỉ áp dụng cho User) ---
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
@@ -49,7 +47,7 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         FullName = null!;
         PasswordHash = null!;
     }
-    // 1. Constructor
+
     public User(string email, string fullName, string passwordHash, string? rawPhone = null, UserRoleEnum role = UserRoleEnum.Customer)
     {
         if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 150)
@@ -72,35 +70,31 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         }
     }
 
-    // 2. Logic: Đổi Email (Trigger xác thực lại)
     public void ChangeEmail(string newEmail)
     {
         Email = EmailAddress.Create(newEmail);
         EmailVerified = false;
     }
 
-    // 3. Logic: Thêm địa chỉ (Giới hạn số lượng & check default edge case)
+    // ĐÃ SỬA: Xóa các check IsDeleted của Address
     public void AddAddress(string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
     {
-        var activeAddresses = _addresses.Where(a => !a.IsDeleted).ToList();
-
-        if (activeAddresses.Count >= 5)
+        if (_addresses.Count >= 5)
             throw new InvalidOperationException("Không thể thêm quá 5 địa chỉ.");
 
-        if (activeAddresses.Count == 0)
+        if (_addresses.Count == 0)
         {
             isDefault = true;
         }
         else if (isDefault)
         {
-            foreach (var addr in activeAddresses) addr.RemoveDefault();
+            foreach (var addr in _addresses) addr.RemoveDefault();
         }
 
         var newAddress = new Address(name, rawPhone, detail, province, district, commune, lat, lng, isDefault);
         _addresses.Add(newAddress);
     }
 
-    // 4. Logic: Khôi phục tài khoản (Reset hoàn toàn trạng thái bảo mật)
     public void RestoreAccount()
     {
         if (!IsDeleted) throw new InvalidOperationException("Tài khoản chưa bị xóa.");
@@ -108,30 +102,40 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         IsDeleted = false;
         DeletedAt = null;
         Status = UserStatusEnum.Active;
-
-        // Reset security state
         FailedLoginAttempts = 0;
         LockoutEnd = null;
     }
 
-    // 5. Logic: Vô danh hóa (Dùng GUID chống collision)
     public void AnonymizeEmailForHardDelete()
     {
         if (!IsDeleted) throw new InvalidOperationException("Chỉ được vô danh hóa tài khoản đã xóa mềm.");
-
         Email = EmailAddress.Create($"deleted_{Guid.NewGuid():N}@anonymized.com");
     }
 
-    // 6. Logic: Đổi mật khẩu
     public void ChangePassword(string newPasswordHash)
     {
         if (string.IsNullOrWhiteSpace(newPasswordHash))
             throw new ArgumentException("PasswordHash không hợp lệ.");
-
         PasswordHash = newPasswordHash;
     }
 
-    // 7. Logic: Khóa tài khoản
+    public void UpdateProfile(string fullName, string? rawPhone, string? thumbnailUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 150)
+            throw new ArgumentException("Họ tên không hợp lệ hoặc quá dài.");
+
+        FullName = fullName.Trim();
+        ThumbnailUrl = thumbnailUrl?.Trim();
+
+        if (string.IsNullOrWhiteSpace(rawPhone))
+        {
+            Phone = null;
+        }
+        else
+        {
+            Phone = PhoneNumber.Create(rawPhone);
+        }
+    }
     public void LockAccount(DateTime lockoutEndTime)
     {
         if (lockoutEndTime <= DateTime.UtcNow)
@@ -141,45 +145,39 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         LockoutEnd = lockoutEndTime;
     }
 
-    // 8. Cập nhật địa chỉ
+    // ĐÃ SỬA: Xóa các check IsDeleted của Address
     public void UpdateAddress(int addressId, string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
     {
-        var address = _addresses.FirstOrDefault(a => a.Id == addressId && !a.IsDeleted)
+        var address = _addresses.FirstOrDefault(a => a.Id == addressId)
             ?? throw new InvalidOperationException("Không tìm thấy địa chỉ hợp lệ.");
 
         address.Update(name, rawPhone, detail, province, district, commune, lat, lng);
 
-        // Xử lý logic đổi default
         if (isDefault && !address.IsDefault)
         {
-            var activeAddresses = _addresses.Where(a => !a.IsDeleted);
-            foreach (var addr in activeAddresses) addr.RemoveDefault();
-
+            foreach (var addr in _addresses) addr.RemoveDefault();
             address.SetAsDefault();
         }
     }
 
-    // 9. Xóa mềm địa chỉ và Auto-promote
+    // ĐÃ SỬA: Đã chuẩn hóa thành Hard Delete ở tin nhắn trước
     public void RemoveAddress(int addressId)
     {
-        var address = _addresses.FirstOrDefault(a => a.Id == addressId && !a.IsDeleted)
+        var address = _addresses.FirstOrDefault(a => a.Id == addressId)
             ?? throw new InvalidOperationException("Không tìm thấy địa chỉ hợp lệ.");
-
-        address.MarkAsDeleted();
 
         if (address.IsDefault)
         {
-            address.RemoveDefault();
-
-            var fallbackAddress = _addresses.FirstOrDefault(a => !a.IsDeleted);
+            var fallbackAddress = _addresses.FirstOrDefault(a => a.Id != addressId);
             if (fallbackAddress != null)
             {
                 fallbackAddress.SetAsDefault();
             }
         }
+
+        _addresses.Remove(address);
     }
 
-    // 10. Logic: Tạo Token khôi phục mật khẩu
     public string GeneratePasswordResetToken(double expiryMinutes = 15)
     {
         var token = GenerateSecureOtp();
@@ -188,7 +186,6 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         return token;
     }
 
-    // 11. Logic: Xác nhận Token và Đổi mật khẩu
     public void ConsumePasswordResetToken(string token, string newPasswordHash)
     {
         if (string.IsNullOrWhiteSpace(ResetPasswordToken) || ResetPasswordToken != token)
@@ -197,15 +194,11 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         if (ResetPasswordTokenExpiryTime < DateTime.UtcNow)
             throw new InvalidOperationException("Mã xác thực đã hết hạn.");
 
-        // Đổi mật khẩu
         PasswordHash = newPasswordHash;
-
-        // Hủy token sau khi dùng xong để tránh bị dùng lại (Replay Attack)
         ResetPasswordToken = null;
         ResetPasswordTokenExpiryTime = null;
     }
 
-    // 12. Logic: Tạo Token xác thực Email (Sống 24 giờ)
     public string GenerateEmailVerificationToken(double expiryHours = 24)
     {
         var token = GenerateSecureOtp();
@@ -214,7 +207,6 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         return token;
     }
 
-    // 13. Logic: Kiểm tra Token và Kích hoạt Email
     public void VerifyEmail(string token)
     {
         if (EmailVerified)
@@ -227,16 +219,12 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
             throw new InvalidOperationException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
 
         EmailVerified = true;
-
-        // Hủy token sau khi dùng
         VerificationToken = null;
         VerificationTokenExpiresAt = null;
     }
 
     private static string GenerateSecureOtp()
     {
-        // Sinh ra 1 số ngẫu nhiên chuẩn mật mã học từ 100000 đến 999999
-        var randomNumber = RandomNumberGenerator.GetInt32(100000, 1000000);
-        return randomNumber.ToString();
+        return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
     }
 }
