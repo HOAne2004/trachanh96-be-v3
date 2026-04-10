@@ -2,28 +2,26 @@
 using Catalog.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Domain.ValueObjects;
 
-namespace Catalog.Application.Features.Products
+namespace Catalog.Application.Features.Products.Queries
 {
-    public record GetProductBySlugQuery(Slug Slug) : IRequest<Result<ProductDetailDto>>;
+    public record GetProductByIdQuery(Guid productId) : IRequest<Result<ProductDetailDto>>;
 
-    public class GetProductBySlugQueryHandler : IRequestHandler<GetProductBySlugQuery, Result<ProductDetailDto>>
+    public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, Result<ProductDetailDto>>
     {
         private readonly IProductRepository _productRepository;
-
-        public GetProductBySlugQueryHandler (IProductRepository productRepository)
+        public GetProductByIdQueryHandler(IProductRepository productRepository)
         {
             _productRepository = productRepository;
         }
 
-        public async Task<Result<ProductDetailDto>> Handle (GetProductBySlugQuery request, CancellationToken cancellationToken)
+        public async Task<Result<ProductDetailDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
         {
-            var product = await _productRepository.GetBySlugAsync (request.Slug);
+            var product = await _productRepository.GetByPublicIdAsync(request.productId, cancellationToken);
 
             if (product == null)
             {
-                return Result<ProductDetailDto>.Failure("Không tìm thấy sản phẩm tương ứng");
+                return Result<ProductDetailDto>.Failure("Không tìm thấy sản phẩm");
             }
 
             var sizes = product.ProductSizes.Select(s => new ProductSizeDto(

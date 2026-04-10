@@ -1,5 +1,5 @@
 ﻿
-using Catalog.Application.Features.Products;
+using Catalog.Application.Features.Products.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;

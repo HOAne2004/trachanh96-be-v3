@@ -4,11 +4,10 @@ using Catalog.Domain.Enums;
 using Shared.Domain.Enums;
 using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
 
-namespace Catalog.Application.Features.Products;
+namespace Catalog.Application.Features.Products.Commands;
 
 // DTO cho Size
 public record CreateProductSizeDto(
@@ -90,13 +89,11 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 {
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateProductCommandHandler(IProductRepository productRepository, ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+    public CreateProductCommandHandler(IProductRepository productRepository, ICategoryRepository categoryRepository)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
-        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Guid>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -149,7 +146,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             }
 
             _productRepository.Add(product);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result<Guid>.Success(product.PublicId);
         }

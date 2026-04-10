@@ -3,7 +3,7 @@ using Catalog.Domain.Enums;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Products.Queries.GetCatalogProducts;
+namespace Catalog.Application.Features.Products.Queries;
 
 public record CustomerProductCardDto(
     Guid Id,

@@ -3,7 +3,7 @@ using MediatR;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Products;
+namespace Catalog.Application.Features.Products.Commands;
 
 public record DeleteProductCommand(Guid Id) : IRequest<Result>;
 

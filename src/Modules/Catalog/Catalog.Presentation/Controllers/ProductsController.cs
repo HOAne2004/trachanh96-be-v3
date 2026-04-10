@@ -1,4 +1,4 @@
-﻿using Catalog.Application.Features.Products;
+﻿using Catalog.Application.Features.Products.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

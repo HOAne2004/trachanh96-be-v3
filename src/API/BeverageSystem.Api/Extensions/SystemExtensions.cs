@@ -1,4 +1,16 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿/// <summary>
+/// [API EXTENSIONS: CẤU HÌNH BẢO MẬT JWT & SWAGGER]
+/// Chức năng: Tách biệt logic cấu hình các service của framework ra khỏi Program.cs để dễ bảo trì.
+/// 
+/// Đặc điểm nổi bật (Rất quan trọng cho Frontend):
+/// - AddJwtAuthentication: Không chỉ xác thực Token, mà còn Ghi đè (Override) các sự kiện cốt lõi (OnAuthenticationFailed, OnChallenge, OnForbidden).
+/// - Ép các lỗi của hệ thống bảo mật (mặc định không có body) phải trả về chuẩn JSON 'ErrorResponse'.
+/// - Giúp Frontend (Axios Interceptors) đồng nhất được định dạng nhận lỗi (luôn là đối tượng có ErrorCode, Message) dù lỗi xảy ra ở Middleware hay trong Controller.
+/// 
+/// - AddSwaggerConfig: Tích hợp nút "Authorize" (ổ khóa) trên giao diện Swagger UI để Dev/QA dễ dàng dán Token vào test API.
+/// </summary>
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shared.Application.Models;

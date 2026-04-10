@@ -3,7 +3,7 @@ using Catalog.Domain.Enums;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Products.Queries.GetAdminProducts;
+namespace Catalog.Application.Features.Products.Queries;
 
 public record AdminProductSummaryDto(
     Guid Id,

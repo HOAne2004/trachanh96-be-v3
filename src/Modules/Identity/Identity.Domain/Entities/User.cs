@@ -145,7 +145,6 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         LockoutEnd = lockoutEndTime;
     }
 
-    // ĐÃ SỬA: Xóa các check IsDeleted của Address
     public void UpdateAddress(int addressId, string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
     {
         var address = _addresses.FirstOrDefault(a => a.Id == addressId)
@@ -160,7 +159,6 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         }
     }
 
-    // ĐÃ SỬA: Đã chuẩn hóa thành Hard Delete ở tin nhắn trước
     public void RemoveAddress(int addressId)
     {
         var address = _addresses.FirstOrDefault(a => a.Id == addressId)
@@ -226,5 +224,22 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
     private static string GenerateSecureOtp()
     {
         return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+    }
+
+    // Logic: Admin thay đổi quyền của User
+    public void ChangeRole(UserRoleEnum newRole)
+    {
+        Role = newRole;
+    }
+
+    // Logic: Admin mở khóa tài khoản trước thời hạn
+    public void UnlockAccount()
+    {
+        if (Status != UserStatusEnum.Locked)
+            throw new InvalidOperationException("Tài khoản này hiện không bị khóa.");
+
+        Status = UserStatusEnum.Active;
+        LockoutEnd = null;
+        FailedLoginAttempts = 0; // Reset luôn số đếm để user đăng nhập lại từ đầu
     }
 }

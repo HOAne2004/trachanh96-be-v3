@@ -1,7 +1,24 @@
-﻿using FluentValidation;
+﻿/// <summary>
+/// [API MIDDLEWARE: BỘ BẮT LỖI TẬP TRUNG TOÀN CẦU]
+/// Chức năng: "Tấm khiên" cuối cùng chặn mọi Exception không được handle trong hệ thống, tránh việc rò rỉ stack trace ra bên ngoài và đảm bảo Frontend luôn nhận được JSON.
+/// 
+/// Cách hoạt động:
+/// - Kế thừa IExceptionHandler (Tính năng mới của .NET 8).
+/// - Phân loại lỗi: 
+///   + ValidationException (từ FluentValidation) -> Trả về HTTP 400 kèm mảng lỗi chi tiết.
+///   + DomainException (từ tầng Core) -> Trả về HTTP 400 kèm thông báo vi phạm nghiệp vụ.
+///   + UnauthorizedAccessException -> Trả về HTTP 401.
+///   + Các lỗi vỡ hệ thống khác (Exception) -> Đóng gói thành HTTP 500 (Internal Server Error).
+/// - Sử dụng chuẩn ProblemDetails (RFC 7807) để format cấu trúc JSON trả về.
+/// 
+/// Sử dụng: Đăng ký trong Program.cs bằng builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+/// Nhờ file này, các Dev làm Handler không cần viết try/catch lặp đi lặp lại nữa.
+/// </summary>
+
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Domain.Exceptions; // Thêm using này
+using Shared.Domain.Exceptions; 
 
 namespace BeverageSystem.Api.Middlewares;
 

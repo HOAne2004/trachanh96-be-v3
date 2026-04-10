@@ -7,7 +7,7 @@ using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
 using Shared.Domain.Enums;
 
-namespace Catalog.Application.Features.Products;
+namespace Catalog.Application.Features.Products.Commands;
 
 public record UpdateProductSizeDto(SizeEnum Size, decimal PriceOverrideAmount, string Currency = "VND");
 public record UpdateProductToppingDto(int ToppingId, decimal PriceOverrideAmount, int MaxQuantity = 1, string Currency = "VND");

@@ -1,10 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Identity.Application.Features.Users.Commands;
+using Identity.Application.Features.Users.Queries; 
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
+using System.Security.Claims;
 
-namespace Identity.Presentation.Controllers
+namespace Identity.Presentation.Controllers;
+
+[Route("api/identity/users/me")]
+[Authorize]
+public class UsersController : BaseApiController
 {
-    internal class UsersController
+    // Hàm Helper để tái sử dụng việc lấy PublicId từ Token
+    private Guid GetCurrentUserPublicId()
     {
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdString, out var publicId) ? publicId : Guid.Empty;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetProfile()
+    {
+        var publicId = GetCurrentUserPublicId();
+        if (publicId == Guid.Empty)
+            return Unauthorized(new ErrorResponse("INVALID_TOKEN", "Token không hợp lệ."));
+
+        var result = await Mediator.Send(new GetProfileQuery(publicId));
+        return HandleResult(result);
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command)
+    {
+        // Gắn Id từ Token vào để bảo mật IDOR
+        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
+        var result = await Mediator.Send(secureCommand);
+        return HandleResult(result, "Cập nhật thông tin cá nhân thành công!");
+    }
+
+    [HttpPut("password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
+    {
+        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
+        var result = await Mediator.Send(secureCommand);
+        return HandleResult(result, "Đổi mật khẩu thành công!");
+    }
+
+    [HttpPut("email")]
+    public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailCommand command)
+    {
+        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
+        var result = await Mediator.Send(secureCommand);
+        return HandleResult(result, "Đổi email thành công!");
     }
 }

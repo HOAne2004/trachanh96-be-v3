@@ -1,11 +1,9 @@
 ﻿using Identity.Application.Features.Addresses.Commands;
 using Identity.Application.Features.Addresses.Queries;
-using Identity.Domain.Entities;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Application.Models;
-using System.Runtime.InteropServices;
+using Shared.Presentation.Controllers;
 using System.Security.Claims;
 
 namespace Identity.Presentation.Controllers;
