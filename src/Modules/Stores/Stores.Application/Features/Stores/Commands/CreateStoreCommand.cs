@@ -101,7 +101,6 @@ namespace Stores.Application.Features.Stores.Commands
 
                 // 4. Tuân thủ Hiến pháp: Giao cho Repo Add, UoW Save
                 _storeRepository.Add(store);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return Result<Guid>.Success(store.PublicId);
             }

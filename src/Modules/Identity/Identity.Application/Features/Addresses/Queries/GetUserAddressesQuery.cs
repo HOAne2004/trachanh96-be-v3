@@ -33,19 +33,14 @@ namespace Identity.Application.Features.Addresses.Queries
             }
 
             // Map từ Domain Entity (Address) sang DTO (AddressDto)
-            var addressDtos = user.Addresses.Select(a => new AddressDto(
-                Id: a.Id,
-                RecipientName: a.RecipientName,
-                PhoneNumber: a.RecipientPhone.Value, // Lấy giá trị từ Value Object
-                AddressDetail: a.AddressDetail,
-                Province: a.Province,
-                District: a.District,
-                Commune: a.Commune,
-                FullAddress: a.FullAddress,          // Tận dụng logic nối chuỗi đã viết trong Entity
-                Latitude: a.Latitude,
-                Longitude: a.Longitude,
-                IsDefault: a.IsDefault
-            ))
+            var addressDtos = user.Addresses.Select(a => new AddressDto
+            {
+                Id = a.Id,
+                RecipientName = a.RecipientName,
+                Phone = a.RecipientPhone.Value, // Sửa lại thành Phone (hoặc PhoneNumber tùy vào class AddressDto của bạn)
+                FullAddress = a.FullAddress,
+                IsDefault = a.IsDefault
+            })
             // Sắp xếp: Địa chỉ mặc định luôn lên đầu tiên, sau đó xếp theo ID giảm dần (mới tạo lên trước)
             .OrderByDescending(a => a.IsDefault)
             .ThenByDescending(a => a.Id)

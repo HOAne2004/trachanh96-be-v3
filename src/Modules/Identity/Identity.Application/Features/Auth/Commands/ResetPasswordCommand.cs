@@ -39,6 +39,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         user.ConsumePasswordResetToken(request.Token, newHashedPassword);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
+
         return Result<string>.Success("Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.");
     }
 }

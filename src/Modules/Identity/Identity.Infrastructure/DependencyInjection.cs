@@ -3,7 +3,6 @@ using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Application.Interfaces;
 using Shared.Infrastructure.Interceptors;
 
 namespace Identity.Infrastructure;
@@ -25,11 +24,9 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IPasswordHasher, Services.PasswordHasher>();
-
-
         services.AddScoped<IUserRepository, Repositories.UserRepository>();
-        services.AddScoped<IJwtProvider, Services.JwtProvider>();
         services.AddScoped<IIdentityUnitOfWork, IdentityUnitOfWork>();
+        services.AddScoped<IJwtProvider, Services.JwtProvider>();
 
         return services;
     }

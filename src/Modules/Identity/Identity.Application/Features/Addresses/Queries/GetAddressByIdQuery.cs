@@ -41,19 +41,13 @@ namespace Identity.Application.Features.Addresses.Queries
             }
 
             // 3. Map sang DTO
-            var dto = new AddressDto(
-                Id: address.Id,
-                RecipientName: address.RecipientName,
-                PhoneNumber: address.RecipientPhone.Value,
-                AddressDetail: address.AddressDetail,
-                Province: address.Province,
-                District: address.District,
-                Commune: address.Commune,
-                FullAddress: address.FullAddress,
-                Latitude: address.Latitude,
-                Longitude: address.Longitude,
-                IsDefault: address.IsDefault
-            );
+            var dto = new AddressDto{
+                Id = address.Id,
+                RecipientName = address.RecipientName,
+                Phone = address.RecipientPhone.Value,
+                FullAddress = address.FullAddress,
+                IsDefault = address.IsDefault
+            };
 
             return Result<AddressDto>.Success(dto);
         }

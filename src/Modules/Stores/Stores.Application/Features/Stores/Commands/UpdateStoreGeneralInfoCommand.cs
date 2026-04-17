@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Stores.Commands
@@ -40,11 +39,9 @@ namespace Stores.Application.Features.Stores.Commands
     public class UpdateStoreGeneralInfoCommandHandler : IRequestHandler<UpdateStoreGeneralInfoCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public UpdateStoreGeneralInfoCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public UpdateStoreGeneralInfoCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result> Handle(UpdateStoreGeneralInfoCommand request, CancellationToken cancellationToken)
         {
@@ -64,9 +61,6 @@ namespace Stores.Application.Features.Stores.Commands
                     request.PhoneNumber,
                     request.WifiPassword
                 );
-
-                // 3. Giao cho UnitOfWork lưu xuống Database
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return Result.Success();
             }

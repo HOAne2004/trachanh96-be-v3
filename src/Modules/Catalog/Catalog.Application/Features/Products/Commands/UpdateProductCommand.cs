@@ -1,8 +1,6 @@
 ﻿using Catalog.Application.Interfaces;
-using Catalog.Domain.Enums;
 using MediatR;
 using FluentValidation;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
 using Shared.Domain.Enums;
@@ -32,13 +30,11 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
 {
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateProductCommandHandler(IProductRepository productRepository, ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+    public UpdateProductCommandHandler(IProductRepository productRepository, ICategoryRepository categoryRepository)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
-        _unitOfWork = unitOfWork;
     }
 
     public class UpdateProductSizeDtoValidator : AbstractValidator<UpdateProductSizeDto>
@@ -132,9 +128,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
                     product.AddOrUpdateTopping(t.ToppingId, Money.Create(t.PriceOverrideAmount, t.Currency), t.MaxQuantity);
                 }
             }
-
-            // 7. SaveChanges (EF Core sẽ tự động sinh ra các lệnh DELETE, INSERT, UPDATE cho Size và Topping)
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
         }

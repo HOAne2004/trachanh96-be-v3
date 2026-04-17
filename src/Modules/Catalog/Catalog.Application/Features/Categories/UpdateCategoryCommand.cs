@@ -1,8 +1,6 @@
 ﻿using Catalog.Application.Interfaces;
-using Catalog.Domain.Entities;
 using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Categories
@@ -26,11 +24,9 @@ namespace Catalog.Application.Features.Categories
     public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand, Result<int>>
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public UpdateCategoryCommandHandler(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+        public UpdateCategoryCommandHandler(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result<int>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
@@ -69,9 +65,6 @@ namespace Catalog.Application.Features.Categories
                     category.RemoveParent(); // Rút ra làm danh mục gốc
                 }
             }
-
-            // 5. Lưu xuống DB (EF Core tự nhận biết Object đã bị thay đổi để sinh ra câu lệnh UPDATE)
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return (Result<int>)Result.Success();
         }

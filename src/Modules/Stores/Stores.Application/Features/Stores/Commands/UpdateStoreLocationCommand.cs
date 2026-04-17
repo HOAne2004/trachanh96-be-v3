@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.Interfaces;
 
@@ -35,12 +34,10 @@ namespace Stores.Application.Features.Stores.Commands
     public class UpdateStoreLocationCommandHandler : IRequestHandler<UpdateStoreLocationCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateStoreLocationCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public UpdateStoreLocationCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(UpdateStoreLocationCommand request, CancellationToken cancellationToken)
@@ -57,8 +54,6 @@ namespace Stores.Application.Features.Stores.Commands
                 // 2. Gọi Domain Behavior
                 store.UpdateLocation(request.FullAddress, request.Latitude, request.Longitude);
 
-                // 3. SaveChanges thông qua UnitOfWork
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (ArgumentException ex) // Bắt ArgumentException và ArgumentOutOfRangeException

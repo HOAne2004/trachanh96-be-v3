@@ -1,9 +1,7 @@
 ﻿using Catalog.Application.Interfaces;
-using Catalog.Domain.Entities;
 using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 
 namespace Catalog.Application.Features.Categories
 {
@@ -19,11 +17,9 @@ namespace Catalog.Application.Features.Categories
     public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand, Result<int>>
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public DeleteCategoryCommandHandler(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+        public DeleteCategoryCommandHandler(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result<int>> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
         {
@@ -36,8 +32,6 @@ namespace Catalog.Application.Features.Categories
                 return Result<int>.Failure("Không thể xóa danh mục này vì nó có danh mục con. Vui lòng xóa danh mục con trước");
             // 3. Xóa mềm (Soft Delete)
             category.IsDeleted = true;
-            // 4. Lưu thay đổi vào DB
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<int>.Success(category.Id);
         }
     }

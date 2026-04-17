@@ -10,9 +10,9 @@ public static class DependencyInjection
     {
         // Đăng ký Idempotent Pipeline Behavior vào MediatR
         // Cú pháp AddTransient này tương thích với cơ chế tự động quét Behavior của MediatR
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotentCommandBehavior<,>));
-
         // Tương lai nếu có thêm LoggingBehavior, ValidationBehavior... thì đăng ký tiếp ở đây
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotentCommandBehavior<,>));
 
         return services;
     }

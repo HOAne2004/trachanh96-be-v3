@@ -2,7 +2,6 @@
 using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 
 namespace Catalog.Application.Features.Toppings
 {
@@ -18,11 +17,9 @@ namespace Catalog.Application.Features.Toppings
     public class DeleteToppingCommandHandler : IRequestHandler<DeleteToppingCommand, Result>
     {
         private readonly IToppingRepository _toppingRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public DeleteToppingCommandHandler(IToppingRepository toppingRepository, IUnitOfWork unitOfWork)
+        public DeleteToppingCommandHandler(IToppingRepository toppingRepository)
         {
             _toppingRepository = toppingRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result> Handle(DeleteToppingCommand request, CancellationToken cancellationToken)
         {
@@ -30,7 +27,6 @@ namespace Catalog.Application.Features.Toppings
             if (topping == null)
                 return Result.Failure("Topping không tồn tại hoặc đã bị xóa.");
             topping.Delete();
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
     }

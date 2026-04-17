@@ -1,5 +1,6 @@
 ﻿using Identity.Domain.Enums;
 using Identity.Domain.ValueObjects;
+using Shared.Domain.Exceptions;
 using Shared.Domain.Interfaces;
 using Shared.Domain.SeedWork;
 using System.Linq;
@@ -76,23 +77,27 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         EmailVerified = false;
     }
 
-    // ĐÃ SỬA: Xóa các check IsDeleted của Address
-    public void AddAddress(string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
+    public Address AddAddress(string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
     {
+        // 1. Check rule trước khi làm bất cứ việc gì
         if (_addresses.Count >= 5)
-            throw new InvalidOperationException("Không thể thêm quá 5 địa chỉ.");
+            throw new DomainException("Không thể thêm quá 5 địa chỉ.");
 
+        // 2. Khởi tạo
+        var address = new Address(name, rawPhone, detail, province, district, commune, lat, lng, isDefault);
+
+        // 3. Xử lý logic Default
         if (_addresses.Count == 0)
         {
-            isDefault = true;
+            address.SetAsDefault(); 
         }
-        else if (isDefault)
+        else if (address.IsDefault)
         {
             foreach (var addr in _addresses) addr.RemoveDefault();
         }
 
-        var newAddress = new Address(name, rawPhone, detail, province, district, commune, lat, lng, isDefault);
-        _addresses.Add(newAddress);
+        _addresses.Add(address);
+        return address;
     }
 
     public void RestoreAccount()

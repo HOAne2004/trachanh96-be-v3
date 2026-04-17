@@ -77,7 +77,6 @@ public class EmailService : IEmailService
                 {
                     Username = username,
                     Token = token,
-                    VerificationLink = "", // Bỏ trống vì ta dùng OTP
                     CompanyName = "Trà Chanh 96"
                 });
 

@@ -2,7 +2,6 @@
 using MediatR;
 using Shared.Domain.ValueObjects;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Stores.Commands
@@ -38,12 +37,10 @@ namespace Stores.Application.Features.Stores.Commands
     public class UpdateDeliveryPolicyCommandHandler : IRequestHandler<UpdateStoreDeliveryPolicyCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateDeliveryPolicyCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public UpdateDeliveryPolicyCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(UpdateStoreDeliveryPolicyCommand request, CancellationToken cancellationToken)
@@ -71,7 +68,6 @@ namespace Stores.Application.Features.Stores.Commands
                     baseFee: newBaseFee,
                     feePerKm: newFeePerKm);
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             // 4. CHỈ BẮT NHỮNG LỖI DO DOMAIN NÉM RA

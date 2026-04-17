@@ -56,8 +56,7 @@ namespace Identity.Application.Features.Auth.Commands
 
             var verifyToken = newUser.GenerateEmailVerificationToken();
 
-            await _userRepository.AddAsync(newUser, cancellationToken);
-
+            _userRepository.Add(newUser);
             await _emailService.SendVerificationEmailAsync(newUser.Email.Value, newUser.FullName, verifyToken);
 
             return Result<Guid>.Success(newUser.PublicId);

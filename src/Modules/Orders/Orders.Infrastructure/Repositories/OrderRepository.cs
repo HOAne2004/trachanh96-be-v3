@@ -9,7 +9,7 @@ namespace Orders.Infrastructure.Repositories
     {
         private readonly OrdersDbContext _dbContext;
         public OrderRepository(OrdersDbContext dbContext) => _dbContext = dbContext;
-
+         
         public async Task<Order?> GetByOrderCodeAsync(string orderCode, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Orders

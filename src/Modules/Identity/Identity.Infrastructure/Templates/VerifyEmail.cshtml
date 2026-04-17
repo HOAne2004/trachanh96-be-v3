@@ -1,4 +1,4 @@
-@model Identity.Application.DTOs.Email.VerifyEmailModel
+@model Shared.Application.DTOs.Email.VerifyEmailModel
 <!DOCTYPE html>
 <html>
 <head>
@@ -64,12 +64,6 @@
             </div>
             <p style="text-align: center; color: #6b7280; font-size: 14px;">Mã xác thực này sẽ hết hạn sau 24 giờ.</p>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="@Model.VerificationLink" class="button">Xác thực Email ngay</a>
-            </div>
-
-            <p>Nếu nút trên không hoạt động, bạn có thể copy đường link dưới đây và dán vào trình duyệt:</p>
-            <p><a href="@Model.VerificationLink">@Model.VerificationLink</a></p>
 
             <p>Trân trọng,<br />Đội ngũ @Model.CompanyName</p>
         </div>

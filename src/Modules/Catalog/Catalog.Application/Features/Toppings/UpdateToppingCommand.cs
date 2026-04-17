@@ -1,10 +1,8 @@
 ﻿using Catalog.Application.Interfaces;
-using Catalog.Domain.Entities;
 using Shared.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 
 namespace Catalog.Application.Features.Toppings
 {
@@ -30,11 +28,9 @@ namespace Catalog.Application.Features.Toppings
     public class UpdateToppingCommandHandler : IRequestHandler<UpdateToppingCommand, Result>
     {
         private readonly IToppingRepository _toppingRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public UpdateToppingCommandHandler(IToppingRepository toppingRepository, IUnitOfWork unitOfWork)
+        public UpdateToppingCommandHandler(IToppingRepository toppingRepository)
         {
             _toppingRepository = toppingRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result> Handle(UpdateToppingCommand request, CancellationToken cancellationToken)
         {
@@ -49,8 +45,6 @@ namespace Catalog.Application.Features.Toppings
             // 3. Cập nhật thông tin
             var basePrice = Money.Create(request.BasePrise, request.Currency);
             topping.UpdateDetails(request.Name, basePrice);
-            // 4. Lưu thay đổi vào DB
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
     }

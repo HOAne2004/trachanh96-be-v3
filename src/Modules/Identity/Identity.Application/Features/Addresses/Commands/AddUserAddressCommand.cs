@@ -2,14 +2,15 @@
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
+using Shared.Domain.Exceptions;
 
 namespace Identity.Application.Features.Addresses.Commands
 {
     // ==========================================================
-    // 1. THE COMMAND (Dữ liệu gửi lên từ Controller)
+    // 1. THE COMMAND 
     // ==========================================================
     public record AddUserAddressCommand(
-        Guid UserPublicId, // Lấy từ Token ở Controller, KHÔNG phải do người dùng tự nhập từ Body
+        Guid UserPublicId,
         string RecipientName,
         string PhoneNumber,
         string AddressDetail,
@@ -19,10 +20,10 @@ namespace Identity.Application.Features.Addresses.Commands
         double? Latitude,
         double? Longitude,
         bool IsDefault
-    ) : IRequest<Result<string>>;
+    ) : IRequest<Result<string>>; 
 
     // ==========================================================
-    // 2. THE VALIDATOR (Kiểm tra đầu vào trước khi lọt vào Handler)
+    // 2. THE VALIDATOR (Giữ nguyên hoàn toàn)
     // ==========================================================
     public class AddUserAddressCommandValidator : AbstractValidator<AddUserAddressCommand>
     {
@@ -46,7 +47,6 @@ namespace Identity.Application.Features.Addresses.Commands
             RuleFor(x => x.District).NotEmpty().WithMessage("Quận/Huyện không được để trống.");
             RuleFor(x => x.Commune).NotEmpty().WithMessage("Phường/Xã không được để trống.");
 
-            // Kiểm tra tọa độ GPS nếu có truyền lên
             RuleFor(x => x.Latitude)
                 .InclusiveBetween(-90, 90).WithMessage("Vĩ độ không hợp lệ.")
                 .When(x => x.Latitude.HasValue);
@@ -58,7 +58,7 @@ namespace Identity.Application.Features.Addresses.Commands
     }
 
     // ==========================================================
-    // 3. THE HANDLER (Xử lý logic giao tiếp với Domain)
+    // 3. THE HANDLER
     // ==========================================================
     public class AddUserAddressCommandHandler : IRequestHandler<AddUserAddressCommand, Result<string>>
     {
@@ -69,19 +69,17 @@ namespace Identity.Application.Features.Addresses.Commands
             _userRepository = userRepository;
         }
 
-        public async Task<Result<string>> Handle(AddUserAddressCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(AddUserAddressCommand request, CancellationToken cancellationToken) // ĐÃ SỬA
         {
-            // 1. Lấy thông tin User kèm theo danh sách địa chỉ (cần dùng Include(_addresses) ở tầng Infrastructure)
             var user = await _userRepository.GetByPublicIdAsync(request.UserPublicId, cancellationToken);
             if (user == null)
             {
-                return Result<string>.Failure("Không tìm thấy tài khoản người dùng.");
+                return Result<string>.Failure("Không tìm thấy tài khoản người dùng."); // ĐÃ SỬA
             }
 
             try
             {
-                // 2. Chuyển quyền xử lý nghiệp vụ lõi cho Domain (User.cs)
-                // Lỗi vượt quá 5 địa chỉ sẽ được quăng ra từ trong hàm này.
+                // 1. Uỷ quyền cho Domain xử lý logic (Check < 5 địa chỉ, xử lý Default...)
                 user.AddAddress(
                     request.RecipientName,
                     request.PhoneNumber,
@@ -94,15 +92,13 @@ namespace Identity.Application.Features.Addresses.Commands
                     request.IsDefault
                 );
 
-                // 3. Cập nhật lại Entity
+                // 2. BẮT BUỘC THÊM: Đưa user vào trạng thái Tracking để TransactionBehavior lưu DB
                 await _userRepository.UpdateAsync(user, cancellationToken);
 
-                // 4. Trả về thông báo thành công (TransactionBehavior sẽ tự động bắt lấy và SaveChanges)
                 return Result<string>.Success("Thêm địa chỉ giao hàng thành công.");
             }
-            catch (Exception ex)
+            catch (DomainException ex)
             {
-                // Bắt trọn các lỗi nghiệp vụ như "Không thể thêm quá 5 địa chỉ" từ DomainException/InvalidOperationException
                 return Result<string>.Failure(ex.Message);
             }
         }

@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.Interfaces;
 namespace Stores.Application.Features.Stores.Commands
@@ -19,12 +18,10 @@ namespace Stores.Application.Features.Stores.Commands
     public class DeleteStoreCommandHandler : IRequestHandler<DeleteStoreCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteStoreCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public DeleteStoreCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(DeleteStoreCommand request, CancellationToken cancellationToken)
@@ -36,7 +33,6 @@ namespace Stores.Application.Features.Stores.Commands
             {
                 store.SoftDelete();
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (InvalidOperationException ex)

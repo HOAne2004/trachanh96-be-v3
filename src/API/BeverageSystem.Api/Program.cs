@@ -43,8 +43,19 @@ builder.Services.AddPaymentsInfrastructure(builder.Configuration);
 builder.Services.AddPaymentsApplication();
 // ==========================================================
 
-var app = builder.Build();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Quan trọng nếu sau này bạn dùng Cookie
+    });
+});
 
+var app = builder.Build();
+app.UseCors("AllowViteApp");
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())

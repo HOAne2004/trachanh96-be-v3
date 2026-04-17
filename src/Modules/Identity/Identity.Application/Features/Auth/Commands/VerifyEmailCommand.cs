@@ -38,6 +38,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
 
             await _userRepository.UpdateAsync(user, cancellationToken);
 
+
             return Result<string>.Success("Xác thực Email thành công! Bạn đã có thể đăng nhập.");
         }
         catch (Exception ex)

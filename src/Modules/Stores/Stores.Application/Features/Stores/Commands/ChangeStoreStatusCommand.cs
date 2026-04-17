@@ -2,7 +2,6 @@
 using Stores.Domain.Enums;
 using Stores.Application.Interfaces;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 using FluentValidation;
 
 namespace Stores.Application.Features.Stores.Commands
@@ -37,11 +36,9 @@ namespace Stores.Application.Features.Stores.Commands
     public class ChangeStoreStatusCommandHandler : IRequestHandler<ChangeStoreStatusCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public ChangeStoreStatusCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public ChangeStoreStatusCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result> Handle(ChangeStoreStatusCommand request, CancellationToken cancellationToken)
         {
@@ -71,7 +68,6 @@ namespace Stores.Application.Features.Stores.Commands
                     default:
                         return Result.Failure("Trạng thái cửa hàng không hợp lệ.");
                 }
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (InvalidOperationException ex)

@@ -4,7 +4,6 @@ using Shared.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 
 namespace Catalog.Application.Features.Toppings
 {
@@ -29,11 +28,9 @@ namespace Catalog.Application.Features.Toppings
     public class CreateToppingCommandHandler : IRequestHandler<CreateToppingCommand, Result<int>>
     {
         private readonly IToppingRepository _toppingRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public CreateToppingCommandHandler(IToppingRepository toppingRepository, IUnitOfWork unitOfWork)
+        public CreateToppingCommandHandler(IToppingRepository toppingRepository)
         {
             _toppingRepository = toppingRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result<int>> Handle(CreateToppingCommand request, CancellationToken cancellationToken)
         {
@@ -49,7 +46,6 @@ namespace Catalog.Application.Features.Toppings
                 basePrice: basePrice);
             // 3. Thêm vào DB
             _toppingRepository.Add(topping);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<int>.Success(topping.Id);
         }
     }

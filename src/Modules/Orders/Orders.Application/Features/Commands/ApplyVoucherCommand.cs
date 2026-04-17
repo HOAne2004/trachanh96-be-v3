@@ -61,7 +61,6 @@ namespace Orders.Application.Features.Commands
                     voucher.MinOrderValue
                 );
 
-                // TransactionBehavior sẽ tự động SaveChanges()!
                 return Result<Guid>.Success(order.Id);
             }
             catch (DomainException ex) // Hứng lỗi "Chưa đạt giá trị tối thiểu"

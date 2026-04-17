@@ -2,7 +2,6 @@
 using Catalog.Domain.Entities;
 using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Categories
@@ -25,12 +24,10 @@ namespace Catalog.Application.Features.Categories
     public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, Result<int>>
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly IUnitOfWork _unitOfWork; 
 
-        public CreateCategoryCommandHandler(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+        public CreateCategoryCommandHandler(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result<int>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
@@ -68,8 +65,6 @@ namespace Catalog.Application.Features.Categories
 
             // 4. Ủy quyền cho Repository (Chỉ tracking in-memory)
             _categoryRepository.Add(category);
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result<int>.Success(category.Id);
         }

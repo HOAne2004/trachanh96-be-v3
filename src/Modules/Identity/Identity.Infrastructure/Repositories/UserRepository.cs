@@ -22,9 +22,9 @@ namespace Identity.Infrastructure.Repositories
                 .AnyAsync(u => u.Email == emailAddress && !u.IsDeleted, cancellationToken);
         }
 
-        public async Task AddAsync(User user, CancellationToken cancellationToken = default)
+        public void Add(User user)
         {
-            await _context.Users.AddAsync(user, cancellationToken);
+            _context.Users.Add(user);
         }
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)

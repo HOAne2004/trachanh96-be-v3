@@ -8,10 +8,8 @@ public static class IdentityModule
 {
     public static IServiceCollection AddIdentityModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentityApplication();
-
-        services.AddIdentityInfrastructure(configuration);
-
+        services.AddIdentityApplication(); // Đăng ký MediatR, Validation 
+        services.AddIdentityInfrastructure(configuration); // Đăng ký DbContext, Repository 
         return services;
     }
 }

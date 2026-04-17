@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.DTOs.Requests;
 using Stores.Application.Interfaces;
@@ -39,12 +38,10 @@ namespace Stores.Application.Features.Stores.Commands
     public class SetStoreOperatingHoursCommandHandler : IRequestHandler<SetStoreOperatingHoursCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public SetStoreOperatingHoursCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public SetStoreOperatingHoursCommandHandler(IStoreRepository storeRepository )
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(SetStoreOperatingHoursCommand request, CancellationToken cancellationToken)
@@ -61,7 +58,6 @@ namespace Stores.Application.Features.Stores.Commands
 
                 store.SetOperatingHours(operatingHourConfigs);
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (ArgumentException ex) { return Result.Failure($"Dữ liệu không hợp lệ: {ex.Message}"); }

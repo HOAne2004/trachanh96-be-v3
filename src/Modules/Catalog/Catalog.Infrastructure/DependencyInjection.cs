@@ -4,7 +4,6 @@ using Catalog.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Application.Interfaces;
 using Shared.Infrastructure.Interceptors;
 
 namespace Catalog.Infrastructure;
@@ -25,7 +24,6 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<IUnitOfWork, CatalogUnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IToppingRepository, ToppingRepository>();
         return services;

@@ -20,7 +20,10 @@ public static class DependencyInjection
 
         // Đăng ký FluentValidation
         services.AddValidatorsFromAssembly(assembly);
-
+        services.AddScoped(
+            typeof(IPipelineBehavior<,>),
+            typeof(IdentityTransactionBehavior<,>)
+        );
         return services;
     }
 }
