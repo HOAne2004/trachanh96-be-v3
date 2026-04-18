@@ -39,6 +39,12 @@ namespace Identity.Application.Features.Addresses.Queries
                 RecipientName = a.RecipientName,
                 Phone = a.RecipientPhone.Value, // Sửa lại thành Phone (hoặc PhoneNumber tùy vào class AddressDto của bạn)
                 FullAddress = a.FullAddress,
+                AddressDetail = a.AddressDetail,
+                Province = a.Province,
+                District = a.District,
+                Commune = a.Commune,
+                Latitude = a.Latitude,
+                Longitude = a.Longitude,
                 IsDefault = a.IsDefault
             })
             // Sắp xếp: Địa chỉ mặc định luôn lên đầu tiên, sau đó xếp theo ID giảm dần (mới tạo lên trước)

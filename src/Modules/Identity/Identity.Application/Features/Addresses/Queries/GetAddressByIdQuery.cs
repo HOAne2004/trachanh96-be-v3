@@ -46,6 +46,12 @@ namespace Identity.Application.Features.Addresses.Queries
                 RecipientName = address.RecipientName,
                 Phone = address.RecipientPhone.Value,
                 FullAddress = address.FullAddress,
+                AddressDetail = address.AddressDetail,
+                Province = address.Province,
+                District = address.District,
+                Commune = address.Commune,
+                Latitude = address.Latitude,
+                Longitude = address.Longitude,
                 IsDefault = address.IsDefault
             };
 

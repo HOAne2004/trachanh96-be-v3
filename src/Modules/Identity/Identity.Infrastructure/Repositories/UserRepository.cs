@@ -38,6 +38,7 @@ namespace Identity.Infrastructure.Repositories
         public async Task<User?> GetByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
         {
             return await _context.Users
+                .Include(u => u.Addresses)
                 .FirstOrDefaultAsync(u => u.PublicId == publicId && !u.IsDeleted, cancellationToken);
         }
 
@@ -47,12 +48,12 @@ namespace Identity.Infrastructure.Repositories
         }
 
         public async Task<(IEnumerable<User> Users, int TotalCount)> GetPaginatedAsync(
-    int pageIndex,
-    int pageSize,
-    string? searchTerm,
-    string? role,
-    string? status,
-    CancellationToken cancellationToken)
+            int pageIndex,
+            int pageSize,
+            string? searchTerm,
+            string? role,
+            string? status,
+            CancellationToken cancellationToken)
         {
             // 1. Tạo Query gốc (Tối ưu: Dùng AsNoTracking vì ta chỉ ĐỌC dữ liệu, không Update)
             var query = _context.Set<User>().AsNoTracking().AsQueryable();
