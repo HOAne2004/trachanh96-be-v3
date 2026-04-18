@@ -1,0 +1,49 @@
+@model Shared.Application.DTOs.Email.ChangeEmailOtpModel
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác nhận thay đổi Email</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; margin: 0; padding: 40px 20px; }
+        .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); text-align: center; }
+        .logo { font-size: 24px; font-weight: bold; color: #3C7363; margin-bottom: 20px; font-family: cursive; }
+        .greeting { font-size: 18px; color: #1f2937; margin-bottom: 10px; text-align: left; }
+        .message { font-size: 15px; color: #4b5563; line-height: 1.6; text-align: left; margin-bottom: 30px; }
+        .otp-box { background-color: #ecfdf5; border: 2px dashed #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .otp-code { font-size: 36px; font-weight: bold; color: #047857; letter-spacing: 8px; margin: 0; }
+        .warning { font-size: 13px; color: #ef4444; margin-top: 30px; text-align: left; font-style: italic; }
+        .footer { margin-top: 40px; font-size: 13px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🍋 @Model.CompanyName</div>
+        
+        <p class="greeting">Xin chào <strong>@Model.Username</strong>,</p>
+        
+        <p class="message">
+            Chúng tôi nhận được yêu cầu thay đổi địa chỉ email cho tài khoản của bạn. Để hoàn tất quá trình này, vui lòng sử dụng mã bảo mật (OTP) dưới đây:
+        </p>
+
+        <div class="otp-box">
+            <p class="otp-code">@Model.Token</p>
+        </div>
+
+        <p class="message">
+            Mã này có hiệu lực trong vòng <strong>24 giờ</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.
+        </p>
+
+        <p class="warning">
+            Nếu bạn không yêu cầu thay đổi email, hãy bỏ qua email này hoặc liên hệ ngay với bộ phận hỗ trợ để bảo vệ tài khoản.
+        </p>
+
+        <div class="footer">
+            <p>Trân trọng,</p>
+            <p>Đội ngũ hỗ trợ @Model.CompanyName</p>
+        </div>
+    </div>
+</body>
+</html>

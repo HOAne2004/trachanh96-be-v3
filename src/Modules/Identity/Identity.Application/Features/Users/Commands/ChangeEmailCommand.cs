@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
@@ -19,10 +20,12 @@ namespace Identity.Application.Features.Users.Commands
     public class ChangeEmailCommandHandler : IRequestHandler<ChangeEmailCommand, Result<string>>
     {
         private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService; 
 
-        public ChangeEmailCommandHandler(IUserRepository userRepository)
+        public ChangeEmailCommandHandler(IUserRepository userRepository, IEmailService emailService)
         {
             _userRepository = userRepository;
+            _emailService = emailService;
         }
 
         public async Task<Result<string>> Handle(ChangeEmailCommand request, CancellationToken cancellationToken)
@@ -38,10 +41,13 @@ namespace Identity.Application.Features.Users.Commands
             try
             {
                 user.ChangeEmail(request.NewEmail);
+                var otpToken = user.GenerateEmailVerificationToken();
+
                 await _userRepository.UpdateAsync(user, cancellationToken);
 
-                // Note: Ở thực tế, bạn có thể gọi thêm _emailService.SendVerificationEmailAsync() ở đây
-                return Result<string>.Success("Đổi email thành công. Vui lòng kiểm tra hộp thư để xác thực lại.");
+                await _emailService.SendChangeEmailOtpAsync(request.NewEmail, user.FullName, otpToken);
+
+                return Result<string>.Success("Đã gửi mã xác thực đến email mới. Vui lòng kiểm tra hộp thư.");
             }
             catch (Exception ex)
             {

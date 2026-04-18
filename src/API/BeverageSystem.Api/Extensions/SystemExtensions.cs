@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// [API EXTENSIONS: CẤU HÌNH BẢO MẬT JWT & SWAGGER]
 /// Chức năng: Tách biệt logic cấu hình các service của framework ra khỏi Program.cs để dễ bảo trì.
 /// 
@@ -97,6 +97,9 @@ public static class SystemExtensions
         services.AddSwaggerGen(option =>
         {
             option.SwaggerDoc("v1", new OpenApiInfo { Title = "Beverage API V3", Version = "v1" });
+
+            // Fix duplicate schemaIds error when multiple classes share the same name
+            option.CustomSchemaIds(type => type.FullName ?? type.Name);
 
             option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {

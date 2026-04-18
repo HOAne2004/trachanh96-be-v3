@@ -4,7 +4,7 @@ using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Queries;
 
-public record UserProfileResponse(Guid PublicId, string Email, string FullName, string Role, string? Phone);
+public record UserProfileResponse(Guid PublicId, string Email, string FullName, string Role, string? Phone, string? ThumbnailUrl);
 
 public record GetProfileQuery(Guid PublicId) : IRequest<Result<UserProfileResponse>>;
 
@@ -31,7 +31,8 @@ public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, Result<Us
             Email: user.Email.Value,
             FullName: user.FullName,
             Role: user.Role.ToString(),
-            Phone: user.Phone?.Value
+            Phone: user.Phone?.Value,
+            ThumbnailUrl: user.ThumbnailUrl
         );
 
         return Result<UserProfileResponse>.Success(responseDto);

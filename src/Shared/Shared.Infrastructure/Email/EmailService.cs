@@ -97,4 +97,40 @@ public class EmailService : IEmailService
             throw;
         }
     }
+
+    public async Task SendChangeEmailOtpAsync(string toEmail, string username, string token)
+    {
+        try
+        {
+            // Trỏ đến file template ChangeEmailOtp.cshtml
+            string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "ChangeEmailOtp.cshtml");
+
+            var email = _fluentEmailFactory
+                .Create()
+                .To(toEmail)
+                .Subject("Mã OTP xác nhận thay đổi Email - Trà Chanh 1996")
+                .UsingTemplateFromFile(templatePath, new ChangeEmailOtpModel
+                {
+                    Username = username,
+                    Token = token,
+                    CompanyName = "Trà Chanh 1996"
+                });
+
+            var response = await email.SendAsync();
+
+            if (!response.Successful)
+            {
+                var errors = string.Join(", ", response.ErrorMessages);
+                _logger.LogError($"Gửi email OTP đổi email thất bại đến {toEmail}. Lỗi: {errors}");
+                throw new Exception($"Không thể gửi email OTP: {errors}");
+            }
+
+            _logger.LogInformation($"[SUCCESS] Đã gửi mail OTP đổi email thành công đến: {toEmail}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Lỗi hệ thống khi gửi email OTP đổi email đến {toEmail}");
+            throw;
+        }
+    }
 }

@@ -54,4 +54,12 @@ public class UsersController : BaseApiController
         var result = await Mediator.Send(secureCommand);
         return HandleResult(result, "Đổi email thành công!");
     }
+
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+    {
+        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
+        var result = await Mediator.Send(secureCommand);
+        return HandleResult(result);
+    }
 }
