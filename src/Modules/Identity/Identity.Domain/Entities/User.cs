@@ -69,6 +69,7 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         {
             Phone = PhoneNumber.Create(rawPhone);
         }
+        CreatedAt = DateTime.UtcNow;
     }
 
     public void ChangeEmail(string newEmail)
@@ -130,7 +131,10 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
             throw new ArgumentException("Họ tên không hợp lệ hoặc quá dài.");
 
         FullName = fullName.Trim();
-        ThumbnailUrl = thumbnailUrl?.Trim();
+        if (!string.IsNullOrWhiteSpace(thumbnailUrl))
+        {
+            ThumbnailUrl = thumbnailUrl.Trim();
+        }
 
         if (string.IsNullOrWhiteSpace(rawPhone))
         {

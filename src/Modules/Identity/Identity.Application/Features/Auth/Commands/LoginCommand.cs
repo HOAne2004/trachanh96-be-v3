@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands
 {
-    public record AuthResponse(string AccessToken, Guid UserId, string FullName, string Role);
+    public record AuthResponse(string AccessToken, Guid UserId, string FullName, string Role, string? ThumbnailUrl);
 
     public record LoginCommand(string Email, string Password) : IRequest<Result<AuthResponse>>;
 
@@ -51,7 +51,8 @@ namespace Identity.Application.Features.Auth.Commands
                 AccessToken: token,
                 UserId: user.PublicId,
                 FullName: user.FullName,
-                Role: user.Role.ToString()
+                Role: user.Role.ToString(),
+                ThumbnailUrl: user.ThumbnailUrl
             ));
         }
     }
