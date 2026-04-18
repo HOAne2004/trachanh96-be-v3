@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Behaviors;
+using System.Reflection;
 
 namespace Shared.Application;
 
@@ -13,7 +14,10 @@ public static class DependencyInjection
         // Tương lai nếu có thêm LoggingBehavior, ValidationBehavior... thì đăng ký tiếp ở đây
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotentCommandBehavior<,>));
-
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+        });
         return services;
     }
 }
