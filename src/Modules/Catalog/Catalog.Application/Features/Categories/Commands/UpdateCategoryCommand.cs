@@ -3,7 +3,7 @@ using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Categories
+namespace Catalog.Application.Features.Categories.Commands
 {
     public record UpdateCategoryCommand(int Id, string Name, int? ParentId, int DisplayOrder) : IRequest<Result<int>>;
     public class UpdateCategoryCommandValidator : AbstractValidator<UpdateCategoryCommand>

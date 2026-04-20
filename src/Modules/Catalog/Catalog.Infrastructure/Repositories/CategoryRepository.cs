@@ -39,6 +39,14 @@ public class CategoryRepository : ICategoryRepository
             .AnyAsync(x => x.ParentId == categoryId && !x.IsDeleted, cancellationToken);
     }
 
+    public async Task<List<Category>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Categories
+            .Where(x => !x.IsDeleted)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
     public void Add(Category category)
     {
         _context.Categories.Add(category);

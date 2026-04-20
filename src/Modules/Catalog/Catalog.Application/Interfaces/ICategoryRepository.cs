@@ -7,6 +7,7 @@ namespace Catalog.Application.Interfaces
         Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<bool> ExistsByNameAsync(string name, int? parentId, int? excludeId = null, CancellationToken cancellationToken = default);
         Task<bool> HasChildrenAsync(int categoryId, CancellationToken cancellationToken = default);
+        Task<List<Category>> GetAllAsync(CancellationToken cancellationToken = default);
         void Add(Category category);
     }
 }

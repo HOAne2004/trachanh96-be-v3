@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using Catalog.Application.Features.Categories;
 using Microsoft.AspNetCore.Authorization;
+using Catalog.Application.Features.Categories.Commands;
 
 namespace Catalog.Presentation.Controllers
 {

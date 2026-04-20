@@ -4,7 +4,7 @@ using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Categories
+namespace Catalog.Application.Features.Categories.Commands
 {
     public record CreateCategoryCommand(string Name, int? ParentId, int DisplayOrder) : IRequest<Result<int>>;
 

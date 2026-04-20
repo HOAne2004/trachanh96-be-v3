@@ -3,7 +3,7 @@ using FluentValidation;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Catalog.Application.Features.Categories
+namespace Catalog.Application.Features.Categories.Commands
 {
     public record DeleteCategoryCommand(int Id) : IRequest<Result<int>>;
     public class DeleteCategoryCommandValidator : AbstractValidator<DeleteCategoryCommand>
