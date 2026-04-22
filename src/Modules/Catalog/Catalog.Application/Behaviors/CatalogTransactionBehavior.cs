@@ -1,15 +1,16 @@
-﻿using Identity.Application.Interfaces;
+﻿
+using Catalog.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
 
-namespace Identity.Application.Behaviors
+namespace Catalog.Application.Behaviors
 {
-    public class IdentityTransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class CatalogTransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     {
-        private readonly IIdentityUnitOfWork _unitOfWork;
+        private readonly ICatalogUnitOfWork _unitOfWork;
 
-        public IdentityTransactionBehavior(IIdentityUnitOfWork unitOfWork)
+        public CatalogTransactionBehavior(ICatalogUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }

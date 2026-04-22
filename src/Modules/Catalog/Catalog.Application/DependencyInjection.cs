@@ -1,6 +1,8 @@
-﻿using System.Reflection;
+﻿using Catalog.Application.Behaviors;
 using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Catalog.Application
 {
@@ -16,6 +18,10 @@ namespace Catalog.Application
                 config.AddOpenBehavior(typeof(Shared.Application.Behaviors.ValidationBehavior<,>));
             });
             services.AddValidatorsFromAssembly(assembly);
+            services.AddScoped(
+                typeof(IPipelineBehavior<,>),
+                typeof(CatalogTransactionBehavior<,>)
+            );
             return services;
         }
     }
