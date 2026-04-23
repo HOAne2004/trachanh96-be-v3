@@ -1,13 +1,14 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
 {
     // --- COMMAND KHÓA TÀI KHOẢN ---
     // Trừ phi khóa vĩnh viễn, còn không thì ta truyền vào số ngày khóa (LockoutDays)
-    public record LockUserCommand(Guid TargetUserPublicId, int LockoutDays) : IRequest<Result<string>>;
+    public record LockUserCommand(Guid TargetUserPublicId, int LockoutDays) : ICommand<Result<string>>;
 
     public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
     {

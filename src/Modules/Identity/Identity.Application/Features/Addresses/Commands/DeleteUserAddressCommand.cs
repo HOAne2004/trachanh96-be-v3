@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Addresses.Commands
@@ -11,7 +12,7 @@ namespace Identity.Application.Features.Addresses.Commands
     public record DeleteUserAddressCommand(
         Guid UserPublicId, // Lấy từ Token để đảm bảo chỉ chủ tài khoản mới được xóa
         int AddressId      // Lấy từ URL (VD: DELETE /addresses/5)
-    ) : IRequest<Result<string>>;
+    ) : ICommand<Result<string>>;
 
     // ==========================================================
     // 2. THE VALIDATOR (Kiểm tra ID)

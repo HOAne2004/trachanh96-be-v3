@@ -6,7 +6,7 @@ using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
 {
-    public record ChangeEmailCommand(Guid UserPublicId, string NewEmail) : IRequest<Result<string>>;
+    public record ChangeEmailCommand(Guid UserPublicId, string NewEmail) : ICommand<Result<string>>;
 
     public class ChangeEmailCommandValidator : AbstractValidator<ChangeEmailCommand>
     {

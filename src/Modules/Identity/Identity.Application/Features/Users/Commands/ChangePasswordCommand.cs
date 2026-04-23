@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
@@ -12,7 +13,7 @@ namespace Identity.Application.Features.Users.Commands
         Guid UserPublicId, // Lấy từ Token
         string CurrentPassword,
         string NewPassword
-    ) : IRequest<Result<string>>;
+    ) : ICommand<Result<string>>;
 
     // ==========================================================
     // 2. THE VALIDATOR

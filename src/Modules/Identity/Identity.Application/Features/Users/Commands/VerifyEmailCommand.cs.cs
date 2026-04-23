@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
 {
-    public record VerifyEmailCommand(Guid UserPublicId, string OtpToken) : IRequest<Result<string>>;
+    public record VerifyEmailCommand(Guid UserPublicId, string OtpToken) : ICommand<Result<string>>;
 
     public class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailCommand>
     {
@@ -45,7 +46,7 @@ namespace Identity.Application.Features.Users.Commands
                 // Bắt các lỗi throw từ Domain (VD: Mã sai, mã hết hạn)
                 return Result<string>.Failure(ex.Message);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Result<string>.Failure("Có lỗi xảy ra trong quá trình xác thực.");
             }

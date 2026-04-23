@@ -1,11 +1,12 @@
 ﻿using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Behaviors
 {
     public class IdentityTransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : ICommand<TResponse>
     {
         private readonly IIdentityUnitOfWork _unitOfWork;
 

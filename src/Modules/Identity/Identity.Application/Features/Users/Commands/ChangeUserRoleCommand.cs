@@ -2,11 +2,12 @@
 using Identity.Application.Interfaces;
 using Identity.Domain.Enums;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Users.Commands
 {
-    public record ChangeUserRoleCommand(Guid TargetUserPublicId, string NewRole) : IRequest<Result<string>>;
+    public record ChangeUserRoleCommand(Guid TargetUserPublicId, string NewRole) : ICommand<Result<string>>;
 
     public class ChangeUserRoleCommandValidator : AbstractValidator<ChangeUserRoleCommand>
     {

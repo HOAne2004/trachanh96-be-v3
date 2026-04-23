@@ -2,6 +2,7 @@
 using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Addresses.Commands
@@ -21,7 +22,7 @@ namespace Identity.Application.Features.Addresses.Commands
         double? Latitude,
         double? Longitude,
         bool IsDefault
-    ) : IRequest<Result<string>>;
+    ) : ICommand<Result<string>>;
 
     // ==========================================================
     // 2. THE VALIDATOR (Kiểm tra đầu vào)

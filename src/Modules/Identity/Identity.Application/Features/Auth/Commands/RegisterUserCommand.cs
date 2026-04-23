@@ -7,7 +7,7 @@ using Shared.Application.Interfaces;
 
 namespace Identity.Application.Features.Auth.Commands
 {
-    public record RegisterUserCommand(string Email, string FullName, string Password) : IRequest<Result<Guid>>;
+    public record RegisterUserCommand(string Email, string FullName, string Password) : ICommand<Result<Guid>>;
 
     public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
     {

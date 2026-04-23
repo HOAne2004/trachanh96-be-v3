@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands;
 
-public record VerifyEmailCommand(string Email, string Token) : IRequest<Result<string>>;
+public record VerifyEmailCommand(string Email, string Token) : ICommand<Result<string>>;
 
 public class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailCommand>
 {

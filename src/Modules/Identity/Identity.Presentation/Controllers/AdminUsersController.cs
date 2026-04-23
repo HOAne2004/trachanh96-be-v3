@@ -2,6 +2,7 @@
 using Identity.Application.Features.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
 using Shared.Presentation.Controllers;
 
 namespace Identity.Presentation.Controllers;
@@ -26,8 +27,8 @@ public class AdminUsersController : BaseApiController
     [HttpPatch("{publicId:guid}/lock")]
     public async Task<IActionResult> LockUser(Guid publicId, [FromBody] LockUserCommand command)
     {
-        // Đảm bảo ID trên URL và trong Body khớp nhau
-        if (publicId != command.TargetUserPublicId) return BadRequest();
+        if (publicId != command.TargetUserPublicId)
+            return BadRequest(new ErrorResponse("INVALID_ID", "ID trên URL và Body không khớp.")); 
 
         var result = await Mediator.Send(command);
         return HandleResult(result, "Đã khóa tài khoản người dùng.");
@@ -43,7 +44,8 @@ public class AdminUsersController : BaseApiController
     [HttpPatch("{publicId:guid}/role")]
     public async Task<IActionResult> ChangeUserRole(Guid publicId, [FromBody] ChangeUserRoleCommand command)
     {
-        if (publicId != command.TargetUserPublicId) return BadRequest();
+        if (publicId != command.TargetUserPublicId)
+            return BadRequest(new ErrorResponse("INVALID_ID", "ID trên URL và Body không khớp."));
 
         var result = await Mediator.Send(command);
         return HandleResult(result, "Cập nhật quyền thành công.");

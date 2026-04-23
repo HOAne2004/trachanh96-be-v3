@@ -16,14 +16,11 @@ public static class DependencyInjection
         {
             cfg.RegisterServicesFromAssembly(assembly);
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(IdentityTransactionBehavior<,>));
         });
 
         // Đăng ký FluentValidation
         services.AddValidatorsFromAssembly(assembly);
-        services.AddScoped(
-            typeof(IPipelineBehavior<,>),
-            typeof(IdentityTransactionBehavior<,>)
-        );
         return services;
     }
 }

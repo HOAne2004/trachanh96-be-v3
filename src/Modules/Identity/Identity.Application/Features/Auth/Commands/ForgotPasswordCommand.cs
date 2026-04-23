@@ -6,7 +6,7 @@ using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands
 {
-    public record ForgotPasswordCommand(string Email) : IRequest<Result<string>>;
+    public record ForgotPasswordCommand(string Email) : ICommand<Result<string>>;
 
     public class ForgotPasswordCommandValidator : AbstractValidator<ForgotPasswordCommand>
     {

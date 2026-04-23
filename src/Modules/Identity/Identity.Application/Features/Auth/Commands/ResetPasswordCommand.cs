@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands;
 
-public record ResetPasswordCommand(string Email, string Token, string NewPassword) : IRequest<Result<string>>;
+public record ResetPasswordCommand(string Email, string Token, string NewPassword) : ICommand<Result<string>>;
 
 public class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordCommand>
 {
