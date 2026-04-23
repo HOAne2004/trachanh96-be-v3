@@ -1,17 +1,18 @@
 ﻿using Catalog.Application.Interfaces;
-using Shared.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.ValueObjects;
 
 namespace Catalog.Application.Features.Toppings
 {
     public record UpdateToppingCommand(
         int Id,
         string Name,
-        decimal BasePrise,
+        decimal BasePrice,
         string Currency = "VND"
-    ) : IRequest<Result>;
+    ) : ICommand<Result>;
 
     public class UpdateToppingCommandValidator : AbstractValidator<UpdateToppingCommand>
     {
@@ -22,7 +23,7 @@ namespace Catalog.Application.Features.Toppings
                 .NotEmpty().WithMessage("Tên topping không được để trống.")
                 .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("Tên không được chỉ chứa khoảng trắng.")
                 .MaximumLength(255).WithMessage("Tên topping không quá 255 ký tự.");
-            RuleFor(x => x.BasePrise).GreaterThanOrEqualTo(0).WithMessage("Giá cơ sở không được âm.");
+            RuleFor(x => x.BasePrice).GreaterThanOrEqualTo(0).WithMessage("Giá cơ sở không được âm.");
         }
     }
     public class UpdateToppingCommandHandler : IRequestHandler<UpdateToppingCommand, Result>
@@ -43,7 +44,7 @@ namespace Catalog.Application.Features.Toppings
                 return Result.Failure($"Topping '{request.Name}' đã tồn tại.");
             }
             // 3. Cập nhật thông tin
-            var basePrice = Money.Create(request.BasePrise, request.Currency);
+            var basePrice = Money.Create(request.BasePrice, request.Currency);
             topping.UpdateDetails(request.Name, basePrice);
             return Result.Success();
         }

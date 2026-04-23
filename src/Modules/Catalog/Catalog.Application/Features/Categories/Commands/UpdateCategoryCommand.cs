@@ -1,11 +1,12 @@
 ﻿using Catalog.Application.Interfaces;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Categories.Commands
 {
-    public record UpdateCategoryCommand(int Id, string Name, int? ParentId, int DisplayOrder) : IRequest<Result<int>>;
+    public record UpdateCategoryCommand(int Id, string Name, int? ParentId, int DisplayOrder) : ICommand<Result<int>>;
     public class UpdateCategoryCommandValidator : AbstractValidator<UpdateCategoryCommand>
     {
         public UpdateCategoryCommandValidator()

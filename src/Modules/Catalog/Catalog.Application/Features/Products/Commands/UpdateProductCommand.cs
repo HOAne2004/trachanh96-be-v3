@@ -1,9 +1,10 @@
 ﻿using Catalog.Application.Interfaces;
-using MediatR;
 using FluentValidation;
+using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
-using Shared.Domain.ValueObjects;
 using Shared.Domain.Enums;
+using Shared.Domain.ValueObjects;
 
 namespace Catalog.Application.Features.Products.Commands;
 
@@ -24,9 +25,9 @@ public record UpdateProductCommand(
     List<SugarLevelEnum>? AllowedSugarLevels = null,
     List<UpdateProductSizeDto>? Sizes = null,
     List<UpdateProductToppingDto>? Toppings = null
-) : IRequest<Result>;
+) : ICommand<Result<Guid>>;
 
-public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result>
+public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result<Guid>>
 {
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
@@ -70,25 +71,24 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         }
     }
 
-    public async Task<Result> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         // 1. Lấy Product từ DB 
         var product = await _productRepository.GetByPublicIdAsync(request.Id, cancellationToken);
-        if (product == null) return Result.Failure("Không tìm thấy sản phẩm.");
-
+        if (product == null) return Result<Guid>.Failure("Không tìm thấy sản phẩm.");
         // 2. Validate Category
         if (product.CategoryId != request.CategoryId)
         {
             var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken);
             if (category == null || !category.IsActive)
-                return Result.Failure("Danh mục mới không tồn tại hoặc đã bị ẩn.");
+                return Result<Guid>.Failure("Danh mục mới không tồn tại hoặc đã bị ẩn.");
 
             product.UpdateCategory(request.CategoryId);
         }
 
         // 3. Check trùng tên (Bỏ qua chính ID hiện tại)
         var isDuplicate = await _productRepository.ExistsByNameAsync(request.Name, request.CategoryId, product.Id, cancellationToken);
-        if (isDuplicate) return Result.Failure($"Sản phẩm '{request.Name}' đã tồn tại trong danh mục này.");
+        if (isDuplicate) return Result<Guid>.Failure($"Sản phẩm '{request.Name}' đã tồn tại trong danh mục này.");
 
         try
         {
@@ -129,11 +129,11 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
                 }
             }
 
-            return Result.Success();
+            return Result<Guid>.Success(product.PublicId);
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
         {
-            return Result.Failure(ex.Message);
+            return Result<Guid>.Failure(ex.Message);
         }
     }
 }

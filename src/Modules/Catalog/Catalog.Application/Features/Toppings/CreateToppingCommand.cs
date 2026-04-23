@@ -1,9 +1,11 @@
 ﻿using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
-using Shared.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.ValueObjects;
+using System.Windows.Input;
 
 namespace Catalog.Application.Features.Toppings
 {
@@ -11,7 +13,7 @@ namespace Catalog.Application.Features.Toppings
         string Name,
         decimal BasePrice,
         string Currency = "VND"
-    ) : IRequest<Result<int>>;
+    ) : ICommand<Result<int>>;
 
     public class CreateToppingCommandValidator : AbstractValidator<CreateToppingCommand>
     {

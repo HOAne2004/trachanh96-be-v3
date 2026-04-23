@@ -1,12 +1,13 @@
 ﻿
 using Catalog.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Behaviors
 {
     public class CatalogTransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : ICommand<TResponse>
     {
         private readonly ICatalogUnitOfWork _unitOfWork;
 

@@ -16,12 +16,10 @@ namespace Catalog.Application
             {
                 config.RegisterServicesFromAssembly(assembly);
                 config.AddOpenBehavior(typeof(Shared.Application.Behaviors.ValidationBehavior<,>));
+                config.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CatalogTransactionBehavior<,>));
             });
             services.AddValidatorsFromAssembly(assembly);
-            services.AddScoped(
-                typeof(IPipelineBehavior<,>),
-                typeof(CatalogTransactionBehavior<,>)
-            );
+            
             return services;
         }
     }

@@ -1,11 +1,12 @@
 ﻿using Catalog.Application.Interfaces;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Toppings
 {
-    public record DeleteToppingCommand (int id) : IRequest<Result>;
+    public record DeleteToppingCommand (int id) : ICommand<Result>;
 
     public class DeleteToppingCommandValidator : AbstractValidator<DeleteToppingCommand>
     {

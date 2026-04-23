@@ -1,11 +1,13 @@
 ﻿using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
 using Catalog.Domain.Enums;
-using Shared.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.Enums;
 using Shared.Domain.ValueObjects;
+using System.Windows.Input;
 
 namespace Catalog.Application.Features.Products.Commands;
 
@@ -38,7 +40,7 @@ public record CreateProductCommand(
     List<SugarLevelEnum>? AllowedSugarLevels = null,
     List<CreateProductSizeDto>? Sizes = null,
     List<CreateProductToppingDto>? Toppings = null
-) : IRequest<Result<Guid>>;
+) : ICommand<Result<Guid>>;
 
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {

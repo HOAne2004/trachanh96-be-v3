@@ -1,11 +1,12 @@
 ﻿using Catalog.Application.Interfaces;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Categories.Commands
 {
-    public record DeleteCategoryCommand(int Id) : IRequest<Result<int>>;
+    public record DeleteCategoryCommand(int Id) : ICommand<Result<int>>;
     public class DeleteCategoryCommandValidator : AbstractValidator<DeleteCategoryCommand>
     {
         public DeleteCategoryCommandValidator()

@@ -2,11 +2,12 @@
 using Catalog.Domain.Entities;
 using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Catalog.Application.Features.Categories.Commands
 {
-    public record CreateCategoryCommand(string Name, int? ParentId, int DisplayOrder) : IRequest<Result<int>>;
+    public record CreateCategoryCommand(string Name, int? ParentId, int DisplayOrder) : ICommand<Result<int>>;
 
     public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCommand>
     {
