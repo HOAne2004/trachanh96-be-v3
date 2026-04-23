@@ -8,7 +8,8 @@ public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
 {
     public string Name { get; private set; }
     public Slug Slug { get; private set; }
-    public Money BasePrice { get; private set; } 
+    public Money BasePrice { get; private set; }
+    public string? ImageUrl { get; private set; } 
     public bool IsActive { get; private set; }
 
     public DateTime CreatedAt { get; set; }
@@ -23,7 +24,7 @@ public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         BasePrice = null!;
     }
 
-    public Topping(string name, Money basePrice)
+    public Topping(string name, Money basePrice, string? imageUrl = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tên Topping không được trống");
@@ -31,11 +32,12 @@ public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         Name = name.Trim();
         Slug = Slug.Create(Name);
         BasePrice = basePrice ?? throw new ArgumentNullException(nameof(basePrice));
+        ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
         IsActive = true;
         IsDeleted = false;
     }
 
-    public void UpdateDetails(string name, Money basePrice)
+    public void UpdateDetails(string name, Money basePrice, string? imageUrl = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tên không được trống");
@@ -43,6 +45,7 @@ public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         Name = name.Trim();
         Slug = Slug.Create(Name);
         BasePrice = basePrice ?? throw new ArgumentNullException(nameof(basePrice));
+        ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
     }
 
     public void ToggleActiveStatus(bool isActive) => IsActive = isActive;

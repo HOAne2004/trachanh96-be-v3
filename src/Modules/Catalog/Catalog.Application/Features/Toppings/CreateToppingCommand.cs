@@ -5,13 +5,14 @@ using MediatR;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.ValueObjects;
-using System.Windows.Input;
 
 namespace Catalog.Application.Features.Toppings
 {
+    // ĐÃ SỬA: Bổ sung ImageUrl
     public record CreateToppingCommand(
         string Name,
         decimal BasePrice,
+        string? ImageUrl = null,
         string Currency = "VND"
     ) : ICommand<Result<int>>;
 
@@ -21,7 +22,6 @@ namespace Catalog.Application.Features.Toppings
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Tên topping không được để trống.")
-                .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("Tên không được chỉ chứa khoảng trắng.")
                 .MaximumLength(255).WithMessage("Tên topping không quá 255 ký tự.");
             RuleFor(x => x.BasePrice).GreaterThanOrEqualTo(0).WithMessage("Giá cơ sở không được âm.");
         }
@@ -36,17 +36,18 @@ namespace Catalog.Application.Features.Toppings
         }
         public async Task<Result<int>> Handle(CreateToppingCommand request, CancellationToken cancellationToken)
         {
-            // 1. Kiểm tra trùng lặp
             if (await _toppingRepository.ExistsByNameAsync(request.Name, null, cancellationToken))
             {
                 return Result<int>.Failure($"Topping '{request.Name}' đã tồn tại.");
             }
-            // 2. Khởi tạo Entity
+
             var basePrice = Money.Create(request.BasePrice, request.Currency);
+            // ĐÃ SỬA: Truyền ImageUrl vào constructor
             var topping = new Topping(
                 name: request.Name,
-                basePrice: basePrice);
-            // 3. Thêm vào DB
+                basePrice: basePrice,
+                imageUrl: request.ImageUrl);
+
             _toppingRepository.Add(topping);
             return Result<int>.Success(topping.Id);
         }

@@ -30,7 +30,9 @@ namespace Catalog.Application.Features.Products.Queries
                 Currency: s.PriceOverride.Currency)).ToList();
 
             var toppings = product.ProductToppings.Select(t => new ProductToppingDto(
-                ToppingId: t.ProductId,
+                ToppingId: t.ToppingId, 
+                Name: t.Topping?.Name ?? "Topping chưa rõ tên", 
+                ImageUrl: t.Topping?.ImageUrl,
                 PriceAmount: t.PriceOverride.Amount,
                 MaxQuantity: t.MaxQuantity,
                 Currency: t.PriceOverride.Currency)).ToList();
@@ -51,7 +53,11 @@ namespace Catalog.Application.Features.Products.Queries
                 AllowedIceLevels: product.AllowedIceLevels.Select(x => x.ToString()).ToList(),
                 AllowedSugarLevels: product.AllowedSugarLevels.Select(x => x.ToString()).ToList(),
                 Sizes: sizes,
-                Toppings: toppings);
+                Toppings: toppings,
+                TotalSold: product.TotalSold,
+                TotalRating: product.TotalRating,
+                PublishedAt: product.PublishedAt,
+                CreatedAt: product.CreatedAt);
             return Result<ProductDetailDto>.Success(dto);
         }
     }

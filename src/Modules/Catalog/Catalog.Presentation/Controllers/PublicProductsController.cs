@@ -9,6 +9,13 @@ namespace Catalog.Presentation.Controllers
     [AllowAnonymous]
     public class PublicProductsController : BaseApiController
     {
+        [HttpGet] // KHÔNG CÓ THAM SỐ TRÊN URL
+        public async Task<IActionResult> GetCatalogProducts([FromQuery] GetCatalogProductsQuery query, CancellationToken cancellationToken)
+        {
+            // Gọi Query Handler mà ta đã viết
+            var result = await Mediator.Send(query, cancellationToken);
+            return HandleResult(result);
+        }
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetProductByPublicId(Guid id, CancellationToken cancellationToken)
         {

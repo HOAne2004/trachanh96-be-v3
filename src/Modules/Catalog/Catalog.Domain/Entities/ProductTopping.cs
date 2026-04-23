@@ -6,10 +6,13 @@ public class ProductTopping
 {
     public int ProductId { get; private set; }
     public int ToppingId { get; private set; }
-
     public Money PriceOverride { get; private set; }
-
     public int MaxQuantity { get; private set; }
+
+    // --- BỔ SUNG NAVIGATION PROPERTY ---
+    // Từ khóa 'virtual' giúp EF Core có thể Lazy Loading (nếu được cấu hình)
+    // Dùng để lấy thông tin Tên, Hình ảnh từ bảng Topping gốc
+    public virtual Topping? Topping { get; private set; }
 
     protected ProductTopping()
     {

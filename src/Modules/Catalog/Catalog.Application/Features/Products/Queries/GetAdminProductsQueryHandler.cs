@@ -14,6 +14,7 @@ public record AdminProductSummaryDto(
     string Currency,
     string Status,
     DateTime CreatedAt,
+    DateTime? PublishedAt,
     int TotalSold // Giúp Admin biết món nào đang bán chạy/ế
 );
 
@@ -61,6 +62,7 @@ public class GetAdminProductsQueryHandler : IRequestHandler<GetAdminProductsQuer
             Currency: p.BasePrice.Currency,
             Status: p.Status.ToString(),
             CreatedAt: p.CreatedAt,
+            PublishedAt: p.PublishedAt,
             TotalSold: p.TotalSold // Cột mới thêm
         )).ToList();
 

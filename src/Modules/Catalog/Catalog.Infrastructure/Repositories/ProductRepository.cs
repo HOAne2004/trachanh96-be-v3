@@ -21,6 +21,7 @@ public class ProductRepository : IProductRepository
         return await _context.Products
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
+            .ThenInclude(pt => pt.Topping)
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
 
@@ -54,6 +55,7 @@ public class ProductRepository : IProductRepository
         return await _context.Products
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
+            .ThenInclude(pt => pt.Topping)
             .FirstOrDefaultAsync(p => p.PublicId == publicId && !p.IsDeleted, cancellationToken);
     }
 
@@ -62,6 +64,7 @@ public class ProductRepository : IProductRepository
         return await _context.Products
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
+            .ThenInclude(pt => pt.Topping)
             .FirstOrDefaultAsync(p => p.Slug == slug && !p.IsDeleted, cancellationToken);
     }
     public void Add(Product product)

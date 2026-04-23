@@ -11,9 +11,12 @@ namespace Catalog.Application.DTOs
 
     public record ProductToppingDto(
         int ToppingId,
+        string Name,
+        string? ImageUrl,
         decimal PriceAmount,
         int MaxQuantity,
         string Currency
+
     );
 
     public record ProductDetailDto(
@@ -32,7 +35,11 @@ namespace Catalog.Application.DTOs
         List<string> AllowedIceLevels,  
         List<string> AllowedSugarLevels,
         List<ProductSizeDto> Sizes,
-        List<ProductToppingDto> Toppings
+        List<ProductToppingDto> Toppings,
+        int TotalSold,
+        double TotalRating,
+        DateTime? PublishedAt,
+        DateTime? CreatedAt
     );
 
 }
