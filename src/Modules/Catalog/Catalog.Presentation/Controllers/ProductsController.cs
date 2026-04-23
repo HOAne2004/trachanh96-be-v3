@@ -1,73 +1,37 @@
 ﻿using Catalog.Application.Features.Products.Commands;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
 
 namespace Catalog.Presentation.Controllers;
 
-[ApiController]
 [Route("api/admin/catalog/products")]
-[Authorize (Roles = "Admin")]
-public class ProductsController : ControllerBase
+[Authorize(Roles = "Admin")]
+public class ProductsController : BaseApiController
 {
-    private readonly ISender _sender;
-
-    public ProductsController(ISender sender)
-    {
-        _sender = sender;
-    }
-
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(command, cancellationToken);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(new { Message = result.Error });
-        }
-
-        // Try to extract a `Value` property if present (e.g., Result<T>), otherwise fall back to returning the result itself.
-        var value = result.GetType().GetProperty("Value")?.GetValue(result);
-
-        return Ok(new
-        {
-            Message = "Tạo sản phẩm thành công!",
-            ProductId = value
-        });
+        var result = await Mediator.Send(command, cancellationToken);
+        return HandleResult(result, "Tạo sản phẩm thành công!");
     }
 
-    
-    [HttpPut ("{id:guid}")]
+    [HttpPut("{publicId:guid}")]
     public async Task<IActionResult> UpdateProduct(Guid publicId, [FromBody] UpdateProductCommand command, CancellationToken cancellationToken)
     {
         if (publicId != command.Id)
         {
-            return BadRequest(new { Message = "ID trong URL không khớp với ID trong body." });
+            return BadRequest(new ErrorResponse("INVALID_ID", "ID trong URL không khớp với ID trong body."));
         }
-        var result = await _sender.Send(command, cancellationToken);
-        if (result.IsFailure)
-        {
-            return BadRequest(new { Message = result.Error });
-        }
-
-        var value = result.GetType().GetProperty("Value")?.GetValue(result);
-
-        return Ok(new
-        {
-            Message = "Cập nhật sản phẩm thành công!",
-            ProductId = value
-        });
+        var result = await Mediator.Send(command, cancellationToken);
+        return HandleResult(result, "Cập nhật sản phẩm thành công!");
     }
-     [HttpDelete("{id:guid}")]
-     public async Task<IActionResult> DeleteProduct(Guid publicId, CancellationToken cancellationToken)
-     {
-         var command = new DeleteProductCommand(publicId);
-         var result = await _sender.Send(command, cancellationToken);
-         if (result.IsFailure)
-         {
-             return BadRequest(new { Message = result.Error });
-         }
-        return Ok(new { Message = "Xóa sản phẩm thành công. Dữ liệu sẽ được lưu trữ tạm thời trong 30 ngày." });
+
+    [HttpDelete("{publicId:guid}")]
+    public async Task<IActionResult> DeleteProduct(Guid publicId, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new DeleteProductCommand(publicId), cancellationToken);
+        return HandleResult(result, "Xóa sản phẩm thành công. Dữ liệu sẽ được lưu trữ tạm thời trong 30 ngày.");
     }
 }

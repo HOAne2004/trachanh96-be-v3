@@ -1,35 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
+﻿using Catalog.Application.Features.Categories.Commands;
 using Microsoft.AspNetCore.Authorization;
-using Catalog.Application.Features.Categories.Commands;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
 
 namespace Catalog.Presentation.Controllers
 {
-    [ApiController]
     [Route("api/admin/catalog/categories")]
     [Authorize(Roles = "Admin")]
-    public class CategoriesController : ControllerBase
+    public class CategoriesController : BaseApiController
     {
-        private readonly ISender _sender;
-
-        public CategoriesController(ISender sender)
-        {
-            _sender = sender;
-        }
-
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure)
-            {
-                return BadRequest(new { Message = result.Error });
-            }
-            return Ok(new
-            {
-                Message = "Tao danh mục thành công!",
-                CategoryId = result.Value
-            });
+            var result = await Mediator.Send(command, cancellationToken);
+            return HandleResult(result, "Tạo danh mục thành công!");
         }
 
         [HttpPut("{id}")]
@@ -37,35 +22,17 @@ namespace Catalog.Presentation.Controllers
         {
             if (id != command.Id)
             {
-                return BadRequest(new { Message = "ID trong URL không khớp với ID trong body." });
+                return BadRequest(new ErrorResponse("INVALID_ID", "ID trong URL không khớp với ID trong body."));
             }
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure)
-            {
-                return BadRequest(new { Message = result.Error });
-            }
-            return Ok(new
-            {
-                Message = "Cập nhật danh mục thành công!",
-                CategoryId = result.Value
-            });
+            var result = await Mediator.Send(command, cancellationToken);
+            return HandleResult(result, "Cập nhật danh mục thành công!");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
-            var command = new DeleteCategoryCommand(id);
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure)
-            {
-                return BadRequest(new { Message = result.Error });
-            }
-            return Ok(new
-            {
-                Message = "Xóa danh mục thành công!",
-                CategoryId = result.Value
-            });
+            var result = await Mediator.Send(new DeleteCategoryCommand(id), cancellationToken);
+            return HandleResult(result, "Xóa danh mục thành công!");
         }
     }
 }
-

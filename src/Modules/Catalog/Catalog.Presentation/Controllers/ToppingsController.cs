@@ -1,49 +1,37 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
-using Catalog.Application.Features.Toppings;
+﻿using Catalog.Application.Features.Toppings;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
 
 namespace Catalog.Presentation.Controllers
 {
-    [ApiController]
     [Route("api/admin/catalog/toppings")]
     [Authorize(Roles = "Admin")]
-    public class ToppingsController : ControllerBase
+    public class ToppingsController : BaseApiController
     {
-        private readonly ISender _sender;
-
-        public ToppingsController(ISender sender)
-        {
-            _sender = sender;
-        }
-
         [HttpPost]
         public async Task<IActionResult> CreateTopping([FromBody] CreateToppingCommand command, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-
-            return Ok(new { Message = "Tạo topping thành công!", ToppingId = result.Value });
+            var result = await Mediator.Send(command, cancellationToken);
+            return HandleResult(result, "Tạo topping thành công!");
         }
 
-        [HttpPut("{id}")] // Sửa POST thành PUT cho chuẩn REST
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTopping(int id, [FromBody] UpdateToppingCommand command, CancellationToken cancellationToken)
         {
-            if (id != command.Id) return BadRequest(new { Message = "ID không khớp." });
+            if (id != command.Id)
+                return BadRequest(new ErrorResponse("INVALID_ID", "ID không khớp."));
 
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-
-            return Ok(new { Message = "Cập nhật topping thành công!" });
+            var result = await Mediator.Send(command, cancellationToken);
+            return HandleResult(result, "Cập nhật topping thành công!");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTopping(int id, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new DeleteToppingCommand(id), cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-
-            return Ok(new { Message = "Xóa topping thành công!" });
+            var result = await Mediator.Send(new DeleteToppingCommand(id), cancellationToken);
+            return HandleResult(result, "Xóa topping thành công!");
         }
     }
 }

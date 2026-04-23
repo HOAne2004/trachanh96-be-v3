@@ -1,43 +1,26 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Catalog.Application.Features.Categories.Queries;
+﻿using Catalog.Application.Features.Categories.Queries;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Presentation.Controllers;
+
 namespace Catalog.Presentation.Controllers
 {
-    [ApiController]
     [Route("api/catalog/categories")]
     [AllowAnonymous]
-    public class PublicCategoryController : ControllerBase
+    public class PublicCategoryController : BaseApiController
     {
-        private readonly ISender _sender;
-
-        public PublicCategoryController(ISender sender)
-        {
-            _sender = sender;
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new GetCategoriesQuery(), cancellationToken);
-            if (result.IsFailure)
-            {
-                return BadRequest(new { Message = result.Error });
-            }
-            var value = result.GetType().GetProperty("Value")?.GetValue(result);
-            return Ok(value ?? (object)result);
+            var result = await Mediator.Send(new GetCategoriesQuery(), cancellationToken);
+            return HandleResult(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new GetCategoryByIdQuery(id), cancellationToken);
-            if (result.IsFailure)
-            {
-                return BadRequest(new { Message = result.Error });
-            }
-            var value = result.GetType().GetProperty("Value")?.GetValue(result);
-            return Ok(value ?? (object)result);
+            var result = await Mediator.Send(new GetCategoryByIdQuery(id), cancellationToken);
+            return HandleResult(result);
         }
     }
 }
