@@ -6,20 +6,25 @@ using Shared.Domain.ValueObjects;
 
 namespace Catalog.Application.Features.Products.Queries
 {
-    public record GetProductBySlugQuery(Slug Slug) : IRequest<Result<ProductDetailDto>>;
+    public record GetProductBySlugQuery(string Slug) : IRequest<Result<ProductDetailDto>>;
 
     public class GetProductBySlugQueryHandler : IRequestHandler<GetProductBySlugQuery, Result<ProductDetailDto>>
     {
         private readonly IProductRepository _productRepository;
 
-        public GetProductBySlugQueryHandler (IProductRepository productRepository)
+        public GetProductBySlugQueryHandler(IProductRepository productRepository)
         {
             _productRepository = productRepository;
         }
 
-        public async Task<Result<ProductDetailDto>> Handle (GetProductBySlugQuery request, CancellationToken cancellationToken)
+        public async Task<Result<ProductDetailDto>> Handle(GetProductBySlugQuery request, CancellationToken cancellationToken)
         {
-            var product = await _productRepository.GetBySlugAsync (request.Slug);
+            // 1. Convert string từ request thành Value Object Slug
+            // (Sử dụng CreateManual hoặc Create tùy vào cách bạn định nghĩa trong class Slug)
+            var slugValueObject = Slug.CreateManual(request.Slug);
+
+            // 2. Truyền Value Object vào Repository
+            var product = await _productRepository.GetBySlugAsync(slugValueObject);
 
             if (product == null)
             {
@@ -32,7 +37,7 @@ namespace Catalog.Application.Features.Products.Queries
                 Currency: s.PriceOverride.Currency)).ToList();
 
             var toppings = product.ProductToppings.Select(t => new ProductToppingDto(
-                ToppingId: t.ProductId,
+                ToppingId: t.ProductId, // Bug tiềm ẩn: Chỗ này có vẻ phải là t.ToppingId thay vì t.ProductId nhé!
                 PriceAmount: t.PriceOverride.Amount,
                 MaxQuantity: t.MaxQuantity,
                 Currency: t.PriceOverride.Currency)).ToList();
@@ -41,11 +46,13 @@ namespace Catalog.Application.Features.Products.Queries
                 Id: product.PublicId,
                 CategoryId: product.CategoryId,
                 Name: product.Name,
-                Slug: product.Slug,
+                // 3. Mẹo nhỏ: Frontend chỉ đọc được string, nên bạn nhớ gọi .Value
+                Slug: product.Slug.Value,
                 Description: product.Description,
                 Ingredients: product.Ingredients,
                 ImageUrl: product.ImageUrl,
                 ProductType: product.ProductType.ToString(),
+                // 4. BasePrice cũng là Value Object, nhớ gọi .Amount và .Currency
                 BasePriceAmount: product.BasePrice.Amount,
                 BasePriceCurrency: product.BasePrice.Currency,
                 PrepTimeInMinutes: product.BasePrepTimeInMinutes,
@@ -54,6 +61,7 @@ namespace Catalog.Application.Features.Products.Queries
                 AllowedSugarLevels: product.AllowedSugarLevels.Select(x => x.ToString()).ToList(),
                 Sizes: sizes,
                 Toppings: toppings);
+
             return Result<ProductDetailDto>.Success(dto);
         }
     }

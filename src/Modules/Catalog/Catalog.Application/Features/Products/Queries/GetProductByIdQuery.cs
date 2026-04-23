@@ -39,7 +39,7 @@ namespace Catalog.Application.Features.Products.Queries
                 Id: product.PublicId,
                 CategoryId: product.CategoryId,
                 Name: product.Name,
-                Slug: product.Slug,
+                Slug: product.Slug.Value,
                 Description: product.Description,
                 Ingredients: product.Ingredients,
                 ImageUrl: product.ImageUrl,

@@ -20,7 +20,7 @@ namespace Catalog.Application.DTOs
         Guid Id,
         int CategoryId,
         string Name,
-        Slug Slug,
+        string Slug,
         string? Description,
         string? Ingredients,
         string? ImageUrl,
