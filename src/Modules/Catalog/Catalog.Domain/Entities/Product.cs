@@ -34,7 +34,7 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
     public DateTime? UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
-
+    public DateTime? PublishedAt { get; private set; }
     protected Product()
     {
         Name = null!;
@@ -155,8 +155,31 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
             throw new InvalidOperationException("Sản phẩm phải được cấu hình ít nhất 1 kích cỡ (Size) trước khi mở bán.");
 
         Status = ProductStatusEnum.Active;
+        PublishedAt ??= DateTime.UtcNow;
+    }
+    public void ScheduleLaunch(DateTime scheduledDate)
+    {
+        if (Status == ProductStatusEnum.Archived)
+            throw new InvalidOperationException("Sản phẩm đã lưu trữ không thể hẹn lịch.");
+
+        //Không cho phép hẹn lịch vào quá khứ
+        if (scheduledDate <= DateTime.UtcNow)
+            throw new ArgumentException("Ngày ra mắt dự kiến phải trong tương lai. Nếu muốn bán ngay, vui lòng chọn 'Mở bán ngay'.");
+
+        Status = ProductStatusEnum.ComingSoon;
+        PublishedAt = scheduledDate;
     }
 
+    public void RescheduleLaunch(DateTime newScheduledDate)
+    {
+        if (Status != ProductStatusEnum.ComingSoon)
+            throw new InvalidOperationException("Chỉ có thể đổi lịch cho sản phẩm đang ở trạng thái 'Sắp ra mắt'.");
+
+        if (newScheduledDate <= DateTime.UtcNow)
+            throw new ArgumentException("Ngày ra mắt mới vẫn phải nằm trong tương lai.");
+
+        PublishedAt = newScheduledDate;
+    }
     public void MarkAsComingSoon()
     {
         if (Status == ProductStatusEnum.Archived)

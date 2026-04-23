@@ -39,7 +39,9 @@ public record CreateProductCommand(
     List<IceLevelEnum>? AllowedIceLevels = null,
     List<SugarLevelEnum>? AllowedSugarLevels = null,
     List<CreateProductSizeDto>? Sizes = null,
-    List<CreateProductToppingDto>? Toppings = null
+    List<CreateProductToppingDto>? Toppings = null,
+    ProductStatusEnum Status = ProductStatusEnum.Draft,
+    DateTime? ScheduledDate = null
 ) : ICommand<Result<Guid>>;
 
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
@@ -83,6 +85,13 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
                 topping.RuleFor(t => t.PriceOverrideAmount).GreaterThanOrEqualTo(0).WithMessage("Giá Topping không được âm.");
                 topping.RuleFor(t => t.MaxQuantity).InclusiveBetween(1, 5).WithMessage("Số lượng tối đa từ 1 đến 5.");
             });
+        });
+
+        When(x => x.Status == ProductStatusEnum.ComingSoon, () =>
+        {
+            RuleFor(x => x.ScheduledDate)
+                .NotNull().WithMessage("Vui lòng chọn ngày giờ ra mắt dự kiến.")
+                .GreaterThan(DateTime.UtcNow).WithMessage("Ngày hẹn giờ phải ở tương lai.");
         });
     }
 }
@@ -145,6 +154,14 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                 {
                     product.AddOrUpdateTopping(toppingDto.ToppingId, Money.Create(toppingDto.PriceOverrideAmount, toppingDto.Currency), toppingDto.MaxQuantity);
                 }
+            }
+            if (request.Status == ProductStatusEnum.Active)
+            {
+                product.Publish();
+            }
+            else if (request.Status == ProductStatusEnum.ComingSoon && request.ScheduledDate.HasValue)
+            {
+                product.ScheduleLaunch(request.ScheduledDate.Value);
             }
 
             _productRepository.Add(product);

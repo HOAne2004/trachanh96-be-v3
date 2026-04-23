@@ -1,4 +1,5 @@
 ﻿using Catalog.Application.Interfaces;
+using Catalog.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Shared.Application.Interfaces;
@@ -24,7 +25,9 @@ public record UpdateProductCommand(
     List<IceLevelEnum>? AllowedIceLevels = null,
     List<SugarLevelEnum>? AllowedSugarLevels = null,
     List<UpdateProductSizeDto>? Sizes = null,
-    List<UpdateProductToppingDto>? Toppings = null
+    List<UpdateProductToppingDto>? Toppings = null,
+    ProductStatusEnum Status = ProductStatusEnum.Draft,
+    DateTime? ScheduledDate = null
 ) : ICommand<Result<Guid>>;
 
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result<Guid>>
@@ -68,6 +71,12 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
             RuleForEach(x => x.Sizes).SetValidator(new UpdateProductSizeDtoValidator());
             // Validate Toppings
             RuleForEach(x => x.Toppings).SetValidator(new UpdateProductToppingDtoValidator());
+            When(x => x.Status == ProductStatusEnum.ComingSoon, () =>
+            {
+                RuleFor(x => x.ScheduledDate)
+                    .NotNull().WithMessage("Vui lòng chọn ngày giờ ra mắt dự kiến.")
+                    .GreaterThan(DateTime.UtcNow).WithMessage("Ngày hẹn giờ phải ở tương lai.");
+            });
         }
     }
 
@@ -128,7 +137,34 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
                     product.AddOrUpdateTopping(t.ToppingId, Money.Create(t.PriceOverrideAmount, t.Currency), t.MaxQuantity);
                 }
             }
-
+            // --- XỬ LÝ THAY ĐỔI TRẠNG THÁI ---
+            if (request.Status == ProductStatusEnum.Active && product.Status != ProductStatusEnum.Active)
+            {
+                product.Publish(); // Mở bán
+            }
+            else if (request.Status == ProductStatusEnum.ComingSoon)
+            {
+                if (product.Status == ProductStatusEnum.ComingSoon)
+                {
+                    // Đang là Hẹn lịch -> Admin muốn dời ngày
+                    if (request.ScheduledDate.HasValue && request.ScheduledDate.Value != product.PublishedAt)
+                    {
+                        product.RescheduleLaunch(request.ScheduledDate.Value);
+                    }
+                }
+                else
+                {
+                    // Từ trạng thái khác chuyển sang Hẹn lịch
+                    if (request.ScheduledDate.HasValue)
+                    {
+                        product.ScheduleLaunch(request.ScheduledDate.Value);
+                    }
+                }
+            }
+            else if (request.Status == ProductStatusEnum.Inactive && product.Status != ProductStatusEnum.Inactive)
+            {
+                product.Deactivate(); // Tạm ẩn / Tạm hết hàng
+            }
             return Result<Guid>.Success(product.PublicId);
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)

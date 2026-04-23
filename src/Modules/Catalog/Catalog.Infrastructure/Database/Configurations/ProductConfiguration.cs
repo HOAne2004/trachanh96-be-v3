@@ -60,5 +60,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(p => p.PublishedAt)
+            .IsRequired(false); // Cho phép Null vì sản phẩm Draft chưa có ngày ra mắt
     }
 }

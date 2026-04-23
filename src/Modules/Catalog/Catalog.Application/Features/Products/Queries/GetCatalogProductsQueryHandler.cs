@@ -7,13 +7,17 @@ namespace Catalog.Application.Features.Products.Queries;
 
 public record CustomerProductCardDto(
     Guid Id,
+    int CategoryId,
     string Name,
     string Slug, 
     string? ImageUrl,
     decimal BasePrice,
     string Currency,
     int TotalSold,
-    double TotalRating
+    double TotalRating,
+    DateTime? PublishedAt,
+    DateTime CreatedAt,
+    string status
 );
 
 public record GetCatalogProductsQuery(
@@ -53,13 +57,17 @@ public class GetCatalogProductsQueryHandler : IRequestHandler<GetCatalogProducts
         // Map sang DTO riêng của Customer
         var dtos = items.Select(p => new CustomerProductCardDto(
             Id: p.PublicId,
+            CategoryId: p.CategoryId,
             Name: p.Name,
             Slug: p.Slug.Value,
             ImageUrl: p.ImageUrl,
             BasePrice: p.BasePrice.Amount,
             Currency: p.BasePrice.Currency,
             TotalSold: p.TotalSold,
-            TotalRating: p.TotalRating
+            TotalRating: p.TotalRating,
+            CreatedAt: p.CreatedAt,
+            PublishedAt: p.PublishedAt,
+            status: p.Status.ToString()
         )).ToList();
 
         return Result<PagedResult<CustomerProductCardDto>>.Success(
