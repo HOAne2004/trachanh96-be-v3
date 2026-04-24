@@ -9,6 +9,7 @@ using Orders.Infrastructure;
 using Payments.Infrastructure;
 using Payments.Application;
 using System.Text.Json.Serialization;
+using Stores.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,7 @@ builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCatalogApplication();
 
 builder.Services.AddStoreInfrastructure(builder.Configuration);
+builder.Services.AddStoresApplication();
 
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
 

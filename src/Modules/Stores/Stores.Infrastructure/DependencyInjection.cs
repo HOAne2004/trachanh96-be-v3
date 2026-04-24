@@ -2,8 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Interceptors;
-using Stores.Infrastructure.Database;
 using Stores.Application.Interfaces;
+using Stores.Infrastructure.Database;
+using Stores.Infrastructure.Repositories;
 using Stores.Infrastructure.Services;
 
 namespace Stores.Infrastructure;
@@ -28,6 +29,8 @@ public static class DependencyInjection
         // TODO: Nơi này sẽ đăng ký StoreRepository và StoreUnitOfWork ở bước sau
         services.AddScoped<IStoreRepository, StoreRepository>();
         services.AddScoped<IStoreQueryService, StoreQueryService >();
+        services.AddScoped<IStoresUnitOfWork, StoresUnitOfWork>();
+
         return services;
     }
 }
