@@ -20,7 +20,11 @@ public class StoreConfiguration : IEntityTypeConfiguration<Domain.Entities.Store
             .HasConversion(slug => slug.Value, value => Slug.Create(value))
             .HasMaxLength(200)
             .IsRequired();
-
+        // 👇 THÊM ĐOẠN NÀY ĐỂ ÉP ENUM THÀNH CHUỖI 👇
+        builder.Property(x => x.Status)
+               .HasConversion<string>()
+               .HasMaxLength(50) // Giới hạn độ dài cho an toàn, tránh DB cấp phát dư thừa
+               .IsRequired();
         builder.ComplexProperty(x => x.BaseShippingFee, fee =>
         {
             fee.Property(p => p.Amount).HasColumnName("BaseShippingFeeAmount");
