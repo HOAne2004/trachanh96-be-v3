@@ -5,9 +5,9 @@ using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Tables.Queries;
 
-public record GetTableByQrTokenQuery(string Token) : IRequest<Result<TableQrResponseDto>>;
+public record GetTableByQrTokenQuery(string Token) : IRequest<Result<TableQrScanResponseDto>>;
 
-public class GetTableByQrTokenQueryHandler : IRequestHandler<GetTableByQrTokenQuery, Result<TableQrResponseDto>>
+public class GetTableByQrTokenQueryHandler : IRequestHandler<GetTableByQrTokenQuery, Result<TableQrScanResponseDto>>
 {
     private readonly IStoreQueryService _queryService;
 
@@ -16,20 +16,20 @@ public class GetTableByQrTokenQueryHandler : IRequestHandler<GetTableByQrTokenQu
         _queryService = queryService;
     }
 
-    public async Task<Result<TableQrResponseDto>> Handle(GetTableByQrTokenQuery request, CancellationToken cancellationToken)
+    public async Task<Result<TableQrScanResponseDto>> Handle(GetTableByQrTokenQuery request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Token))
         {
-            return Result<TableQrResponseDto>.Failure("Mã QR không hợp lệ.");
+            return Result<TableQrScanResponseDto>.Failure("Mã QR không hợp lệ.");
         }
 
         var tableInfo = await _queryService.GetTableByQrTokenAsync(request.Token, cancellationToken);
 
         if (tableInfo == null)
         {
-            return Result<TableQrResponseDto>.Failure("Mã QR không tồn tại, cửa hàng đang đóng cửa hoặc bàn đang tạm ngưng phục vụ.");
+            return Result<TableQrScanResponseDto>.Failure("Mã QR không tồn tại, cửa hàng đang đóng cửa hoặc bàn đang tạm ngưng phục vụ.");
         }
 
-        return Result<TableQrResponseDto>.Success(tableInfo);
+        return Result<TableQrScanResponseDto>.Success(tableInfo);
     }
 }
