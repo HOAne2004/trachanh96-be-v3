@@ -98,11 +98,14 @@ public class ProductRepository : IProductRepository
             query = query.Where(p => p.CategoryId == categoryId.Value);
         }
 
-        // 4. Lọc theo từ khóa tìm kiếm (Name hoặc Slug)
+        // 4. Lọc theo từ khóa tìm kiếm (Name)
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var k = searchTerm.Trim().ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(k) || p.Slug.Value.ToLower().Contains(k));
+            var k = searchTerm.ToLower();
+            query = query.Where(p =>
+                // Nếu dùng SQL Server: p.Name.ToLower().Contains(k) vẫn hoạt động nếu KHÔNG đụng vào ValueObject
+                p.Name.ToLower().Contains(k)
+            );
         }
 
         // 5. Lọc theo thời gian
