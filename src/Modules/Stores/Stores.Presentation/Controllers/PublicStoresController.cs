@@ -31,4 +31,14 @@ public class PublicStoresController : BaseApiController
         var result = await Mediator.Send(new GetTableByQrTokenQuery(token), cancellationToken);
         return HandleResult(result);
     }
+
+    /// <summary>
+    /// API dành cho khách hàng: Lấy chi tiết 1 quán bằng Slug
+    /// </summary>
+    [HttpGet("{slug}")]
+    public async Task<IActionResult> GetCustomerStoreBySlug(string slug, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetCustomerStoreBySlugQuery(slug), cancellationToken);
+        return HandleResult(result);
+    }
 }

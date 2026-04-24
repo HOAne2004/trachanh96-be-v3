@@ -1,68 +1,60 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Application.Models;
+using Shared.Presentation.Controllers;
 using Stores.Application.Features.Areas.Commands;
 using Stores.Application.Features.Areas.Queries;
-using Stores.Application.Features.Tables.Commands; // Thêm dòng này
+using Stores.Application.Features.Tables.Commands;
 
-namespace Stores.Presentation.Controllers
+namespace Stores.Presentation.Controllers;
+
+[ApiController]
+[Route("api/admin/stores/{publicId:guid}/areas")]
+[Authorize(Roles = "Admin")]
+public class AreasController : BaseApiController
 {
-    [ApiController]
-    [Route("api/admin/stores/{publicId:guid}/areas")]
-    [Authorize(Roles = "Admin")]
-    public class AreasController : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> GetAreas(Guid publicId, CancellationToken cancellationToken)
     {
-        private readonly ISender _sender;
-        public AreasController(ISender sender) => _sender = sender;
+        var result = await Mediator.Send(new GetStoreAreasQuery(publicId), cancellationToken);
+        return HandleResult(result);
+    }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAreas(Guid publicId, CancellationToken cancellationToken)
-        {
-            var query = new GetStoreAreasQuery(publicId);
-            var result = await _sender.Send(query, cancellationToken);
-            if (result.IsFailure) return NotFound(new { Message = result.Error });
-            return Ok(result.Value);
-        }
+    [HttpPost]
+    public async Task<IActionResult> AddArea(Guid publicId, [FromBody] AddAreaCommand command, CancellationToken cancellationToken)
+    {
+        if (publicId != command.PublicId)
+            return HandleResult(Result.Failure("ID không khớp."));
 
-        [HttpPost]
-        public async Task<IActionResult> AddArea(Guid publicId, [FromBody] AddAreaCommand command, CancellationToken cancellationToken)
-        {
-            if (publicId != command.PublicId) return BadRequest(new { Message = "ID không khớp." });
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-            return Ok(new { Message = "Thêm khu vực thành công!" });
-        }
+        var result = await Mediator.Send(command, cancellationToken);
+        return HandleResult(result, "Thêm khu vực thành công!");
+    }
 
-        [HttpPut("{areaId:int}")]
-        public async Task<IActionResult> UpdateArea(Guid publicId, int areaId, [FromBody] UpdateAreaCommand command, CancellationToken cancellationToken)
-        {
-            if (publicId != command.PublicId || areaId != command.AreaId)
-                return BadRequest(new { Message = "ID trên URL và dữ liệu không khớp." });
+    [HttpPut("{areaId:int}")]
+    public async Task<IActionResult> UpdateArea(Guid publicId, int areaId, [FromBody] UpdateAreaCommand command, CancellationToken cancellationToken)
+    {
+        if (publicId != command.PublicId || areaId != command.AreaId)
+            return HandleResult(Result.Failure("ID trên URL và dữ liệu không khớp."));
 
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-            return Ok(new { Message = "Cập nhật khu vực thành công!" });
-        }
+        var result = await Mediator.Send(command, cancellationToken);
+        return HandleResult(result, "Cập nhật khu vực thành công!");
+    }
 
-        [HttpDelete("{areaId:int}")]
-        public async Task<IActionResult> DeleteArea(Guid publicId, int areaId, CancellationToken cancellationToken)
-        {
-            var command = new DeleteAreaCommand(publicId, areaId);
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-            return Ok(new { Message = "Xóa khu vực thành công!" });
-        }
+    [HttpDelete("{areaId:int}")]
+    public async Task<IActionResult> DeleteArea(Guid publicId, int areaId, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new DeleteAreaCommand(publicId, areaId), cancellationToken);
+        return HandleResult(result, "Xóa khu vực thành công!");
+    }
 
-        [HttpPost("{areaId:int}/tables")]
-        public async Task<IActionResult> AddTable(Guid publicId, int areaId, [FromBody] AddTableCommand command, CancellationToken cancellationToken)
-        {
-            if (publicId != command.PublicId || areaId != command.AreaId)
-                return BadRequest(new { Message = "ID trên URL và Body không khớp." });
+    [HttpPost("{areaId:int}/tables")]
+    public async Task<IActionResult> AddTable(Guid publicId, int areaId, [FromBody] AddTableCommand command, CancellationToken cancellationToken)
+    {
+        if (publicId != command.PublicId || areaId != command.AreaId)
+            return HandleResult(Result.Failure("ID trên URL và Body không khớp."));
 
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.IsFailure) return BadRequest(new { Message = result.Error });
-
-            return Ok(new { Message = "Thêm bàn thành công!" });
-        }
+        var result = await Mediator.Send(command, cancellationToken);
+        return HandleResult(result, "Thêm bàn thành công!");
     }
 }
