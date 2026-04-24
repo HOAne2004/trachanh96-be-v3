@@ -6,7 +6,7 @@ using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Tables.Commands
 {
-    public record AddTableCommand(Guid PublicId, int AreaId, string Name, int SeatCapacity) : IRequest<Result>;
+    public record AddTableCommand(Guid PublicId, int AreaId, string Name, int SeatCapacity) : ICommand<Result>;
 
     public class AddTableCommandValidator : AbstractValidator<AddTableCommand>
     {
@@ -22,12 +22,10 @@ namespace Stores.Application.Features.Tables.Commands
     public class AddTableCommandHandler : IRequestHandler<AddTableCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public AddTableCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public AddTableCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(AddTableCommand request, CancellationToken cancellationToken)
@@ -38,7 +36,6 @@ namespace Stores.Application.Features.Tables.Commands
             try
             {
                 store.AddTableToArea(request.AreaId, request.Name, request.SeatCapacity);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)

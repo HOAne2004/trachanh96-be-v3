@@ -6,7 +6,7 @@ using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Tables.Commands
 {
-    public record UpdateTableCommand(Guid PublicId, int TableId, string Name, int SeatCapacity, bool IsActive) : IRequest<Result>;
+    public record UpdateTableCommand(Guid PublicId, int TableId, string Name, int SeatCapacity, bool IsActive) : ICommand<Result>;
 
     public class UpdateTableCommandValidator : AbstractValidator<UpdateTableCommand>
     {
@@ -22,12 +22,10 @@ namespace Stores.Application.Features.Tables.Commands
     public class UpdateTableCommandHandler : IRequestHandler<UpdateTableCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateTableCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public UpdateTableCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(UpdateTableCommand request, CancellationToken cancellationToken)
@@ -38,7 +36,6 @@ namespace Stores.Application.Features.Tables.Commands
             try
             {
                 store.UpdateTable(request.TableId, request.Name, request.SeatCapacity, request.IsActive);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)

@@ -9,7 +9,7 @@ namespace Stores.Application.Features.Areas.Commands
     public record DeleteAreaCommand(
         Guid PublicId,
         int AreaId
-    ) : IRequest<Result>;
+    ) : ICommand<Result>;
 
     public class DeleteAreaCommandValidator: AbstractValidator<DeleteAreaCommand>
     {
@@ -23,12 +23,10 @@ namespace Stores.Application.Features.Areas.Commands
     public class  DeleteAreaCommandHandler : IRequestHandler<DeleteAreaCommand,  Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public  DeleteAreaCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public  DeleteAreaCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(DeleteAreaCommand request, CancellationToken cancellationToken)
@@ -38,7 +36,6 @@ namespace Stores.Application.Features.Areas.Commands
             try
             {
                 store.RemoveArea(request.AreaId);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (InvalidOperationException ex)

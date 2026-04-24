@@ -6,7 +6,7 @@ using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Tables.Commands
 {
-    public record DeleteTableCommand(Guid PublicId, int TableId) : IRequest<Result>;
+    public record DeleteTableCommand(Guid PublicId, int TableId) : ICommand<Result>;
 
     public class DeleteTableCommandValidator : AbstractValidator<DeleteTableCommand>
     {
@@ -19,12 +19,10 @@ namespace Stores.Application.Features.Tables.Commands
     public class DeleteTableCommandHandler : IRequestHandler<DeleteTableCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteTableCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public DeleteTableCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(DeleteTableCommand request, CancellationToken cancellationToken)
@@ -35,7 +33,6 @@ namespace Stores.Application.Features.Tables.Commands
             try
             {
                 store.RemoveTable(request.TableId);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (ArgumentException ex)

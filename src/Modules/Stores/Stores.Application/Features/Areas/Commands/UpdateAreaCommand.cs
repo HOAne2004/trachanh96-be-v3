@@ -10,7 +10,7 @@ namespace Stores.Application.Features.Areas.Commands
         Guid PublicId,
         int AreaId,
         string Name,
-        bool IsActive) : IRequest<Result>;
+        bool IsActive) : ICommand<Result>;
 
     public class UpdateAreaCommandValidator: AbstractValidator<UpdateAreaCommand>
     {
@@ -27,11 +27,9 @@ namespace Stores.Application.Features.Areas.Commands
     public class UpdateAreaCommandHandler : IRequestHandler<UpdateAreaCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        public UpdateAreaCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public UpdateAreaCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
         public async Task<Result> Handle(UpdateAreaCommand request, CancellationToken cancellationToken)
         {
@@ -40,7 +38,6 @@ namespace Stores.Application.Features.Areas.Commands
             try
             {
                 store.UpdateArea(request.AreaId, request.Name, request.IsActive);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (InvalidOperationException ex)

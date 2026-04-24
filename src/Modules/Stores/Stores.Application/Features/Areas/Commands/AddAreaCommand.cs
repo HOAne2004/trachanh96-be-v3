@@ -9,7 +9,7 @@ namespace Stores.Application.Features.Areas.Commands
     public record AddAreaCommand(
      Guid PublicId,
      string Name
- ) : IRequest<Result>;
+ ) : ICommand<Result>;
 
     // 2. Validator
     public class AddAreaCommandValidator : AbstractValidator<AddAreaCommand>
@@ -28,12 +28,10 @@ namespace Stores.Application.Features.Areas.Commands
     public class AddAreaCommandHandler : IRequestHandler<AddAreaCommand, Result>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public AddAreaCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public AddAreaCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(AddAreaCommand request, CancellationToken cancellationToken)
@@ -46,7 +44,6 @@ namespace Stores.Application.Features.Areas.Commands
             {
                 store.AddArea(request.Name);
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();
             }
             catch (InvalidOperationException ex) 
