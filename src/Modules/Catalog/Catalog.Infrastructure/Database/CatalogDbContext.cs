@@ -10,7 +10,7 @@ public class CatalogDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Topping> Toppings { get; set; }
-
+    public DbSet<StoreProduct> StoreProducts => Set<StoreProduct>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

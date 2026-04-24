@@ -23,6 +23,7 @@ public record CustomerProductCardDto(
 public record GetCatalogProductsQuery(
     string? SearchTerm = null,
     int? CategoryId = null,
+    Guid? StoreId = null,
     int PageIndex = 1,
     int PageSize = 12 
 ) : IRequest<Result<PagedResult<CustomerProductCardDto>>>;
@@ -49,26 +50,39 @@ public class GetCatalogProductsQueryHandler : IRequestHandler<GetCatalogProducts
         };
 
         var (items, totalCount) = await _productRepository.GetPagedListAsync(
-            request.SearchTerm, request.CategoryId, null,
+            request.SearchTerm, request.CategoryId, request.StoreId, null,
             allowedStatuses, // Cho phép 3 trạng thái
             null, null,
             pageIndex, pageSize, cancellationToken);
 
         // Map sang DTO riêng của Customer
-        var dtos = items.Select(p => new CustomerProductCardDto(
-            Id: p.PublicId,
-            CategoryId: p.CategoryId,
-            Name: p.Name,
-            Slug: p.Slug.Value,
-            ImageUrl: p.ImageUrl,
-            BasePrice: p.BasePrice.Amount,
-            Currency: p.BasePrice.Currency,
-            TotalSold: p.TotalSold,
-            TotalRating: p.TotalRating,
-            CreatedAt: p.CreatedAt,
-            PublishedAt: p.PublishedAt,
-            status: p.Status.ToString()
-        )).ToList();
+        var dtos = items.Select(p =>
+        {
+            // 1. Lấy cấu hình riêng của sản phẩm tại Cửa hàng đang được chọn
+            var storeInfo = request.StoreId.HasValue
+                ? p.StoreProducts.FirstOrDefault(sp => sp.StoreId == request.StoreId.Value)
+                : null;
+
+            return new CustomerProductCardDto(
+                Id: p.PublicId,
+                CategoryId: p.CategoryId,
+                Name: p.Name,
+                Slug: p.Slug.Value,
+                ImageUrl: p.ImageUrl,
+
+                // 2. LOGIC GIÁ: Ưu tiên giá riêng của quán (PriceOverride), nếu null thì lấy giá gốc
+                BasePrice: storeInfo?.PriceOverride ?? p.BasePrice.Amount,
+
+                Currency: p.BasePrice.Currency,
+                TotalSold: p.TotalSold,
+                TotalRating: p.TotalRating,
+                CreatedAt: p.CreatedAt,
+                PublishedAt: p.PublishedAt,
+
+                // 3. LOGIC TRẠNG THÁI: Nếu quán báo hết hàng -> Trả về "OutOfStock", ngược lại dùng trạng thái gốc
+                status: (storeInfo != null && !storeInfo.IsAvailable) ? "OutOfStock" : p.Status.ToString()
+            );
+        }).ToList();
 
         return Result<PagedResult<CustomerProductCardDto>>.Success(
             new PagedResult<CustomerProductCardDto>(dtos, totalCount, pageIndex, pageSize));

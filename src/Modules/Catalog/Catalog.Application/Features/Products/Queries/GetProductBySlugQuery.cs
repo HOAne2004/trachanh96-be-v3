@@ -6,7 +6,8 @@ using Shared.Domain.ValueObjects;
 
 namespace Catalog.Application.Features.Products.Queries
 {
-    public record GetProductBySlugQuery(string Slug) : IRequest<Result<ProductDetailDto>>;
+    // 1. THÊM THAM SỐ StoreId VÀO QUERY
+    public record GetProductBySlugQuery(string Slug, Guid? StoreId = null) : IRequest<Result<ProductDetailDto>>;
 
     public class GetProductBySlugQueryHandler : IRequestHandler<GetProductBySlugQuery, Result<ProductDetailDto>>
     {
@@ -19,11 +20,8 @@ namespace Catalog.Application.Features.Products.Queries
 
         public async Task<Result<ProductDetailDto>> Handle(GetProductBySlugQuery request, CancellationToken cancellationToken)
         {
-            // 1. Convert string từ request thành Value Object Slug
-            // (Sử dụng CreateManual hoặc Create tùy vào cách bạn định nghĩa trong class Slug)
             var slugValueObject = Slug.CreateManual(request.Slug);
 
-            // 2. Truyền Value Object vào Repository
             var product = await _productRepository.GetBySlugAsync(slugValueObject);
 
             if (product == null)
@@ -31,13 +29,18 @@ namespace Catalog.Application.Features.Products.Queries
                 return Result<ProductDetailDto>.Failure("Không tìm thấy sản phẩm tương ứng");
             }
 
+            // 2. LẤY THÔNG TIN RIÊNG CỦA MÓN NÀY TẠI CỬA HÀNG (Nếu có truyền StoreId)
+            var storeInfo = request.StoreId.HasValue
+                ? product.StoreProducts.FirstOrDefault(sp => sp.StoreId == request.StoreId.Value)
+                : null;
+
             var sizes = product.ProductSizes.Select(s => new ProductSizeDto(
                 Size: s.Size.ToString(),
                 PriceAmount: s.PriceOverride.Amount,
                 Currency: s.PriceOverride.Currency)).ToList();
 
             var toppings = product.ProductToppings.Select(t => new ProductToppingDto(
-                ToppingId: t.ToppingId, 
+                ToppingId: t.ToppingId,
                 Name: t.Topping?.Name ?? "Topping chưa rõ tên",
                 ImageUrl: t.Topping?.ImageUrl,
                 PriceAmount: t.PriceOverride.Amount,
@@ -47,18 +50,23 @@ namespace Catalog.Application.Features.Products.Queries
             var dto = new ProductDetailDto(
                 Id: product.PublicId,
                 CategoryId: product.CategoryId,
+                StoreId: request.StoreId,
                 Name: product.Name,
-                // 3. Mẹo nhỏ: Frontend chỉ đọc được string, nên bạn nhớ gọi .Value
                 Slug: product.Slug.Value,
                 Description: product.Description,
                 Ingredients: product.Ingredients,
                 ImageUrl: product.ImageUrl,
                 ProductType: product.ProductType.ToString(),
-                // 4. BasePrice cũng là Value Object, nhớ gọi .Amount và .Currency
-                BasePriceAmount: product.BasePrice.Amount,
+
+                // LOGIC GIÁ BÁN: Ưu tiên giá của quán, không có thì lấy giá gốc
+                BasePriceAmount: storeInfo?.PriceOverride ?? product.BasePrice.Amount,
                 BasePriceCurrency: product.BasePrice.Currency,
+
                 PrepTimeInMinutes: product.BasePrepTimeInMinutes,
-                Status: product.Status.ToString(),
+
+                // LOGIC TRẠNG THÁI: Quán báo hết hàng thì trả về OutOfStock
+                Status: (storeInfo != null && !storeInfo.IsAvailable) ? "OutOfStock" : product.Status.ToString(),
+
                 AllowedIceLevels: product.AllowedIceLevels.Select(x => x.ToString()).ToList(),
                 AllowedSugarLevels: product.AllowedSugarLevels.Select(x => x.ToString()).ToList(),
                 Sizes: sizes,

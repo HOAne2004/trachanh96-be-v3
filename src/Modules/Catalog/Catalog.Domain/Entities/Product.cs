@@ -35,6 +35,9 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     public DateTime? PublishedAt { get; private set; }
+
+    private readonly List<StoreProduct> _storeProducts = new();
+    public IReadOnlyCollection<StoreProduct> StoreProducts => _storeProducts;
     protected Product()
     {
         Name = null!;

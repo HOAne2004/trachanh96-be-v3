@@ -21,6 +21,7 @@ public record AdminProductSummaryDto(
 public record GetAdminProductsQuery(
     string? SearchTerm = null,
     int? CategoryId = null,
+    Guid? StoreId = null,
     ProductTypeEnum? ProductType = null,
     ProductStatusEnum? Status = null,
     DateTime? FromDate = null,
@@ -47,7 +48,7 @@ public class GetAdminProductsQueryHandler : IRequestHandler<GetAdminProductsQuer
         var statuses = request.Status.HasValue ? new List<ProductStatusEnum> { request.Status.Value } : null;
 
         var (items, totalCount) = await _productRepository.GetPagedListAsync(
-            request.SearchTerm, request.CategoryId, request.ProductType,
+            request.SearchTerm, request.CategoryId, request.StoreId, request.ProductType,
             statuses,
             request.FromDate, request.ToDate,
             pageIndex, pageSize, cancellationToken);

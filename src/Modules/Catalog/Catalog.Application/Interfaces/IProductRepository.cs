@@ -15,7 +15,7 @@ namespace Catalog.Application.Interfaces
         void Add(Product product);
 
         Task<(List<Product> Items, int TotalCount)> GetPagedListAsync(
-    string? searchTerm, int? categoryId, ProductTypeEnum? type, List<ProductStatusEnum>? statuses,
+    string? searchTerm, int? categoryId, Guid? storeId, ProductTypeEnum? type, List<ProductStatusEnum>? statuses,
     DateTime? fromDate, DateTime? toDate,
     int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     }

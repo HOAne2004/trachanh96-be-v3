@@ -22,6 +22,7 @@ namespace Catalog.Application.DTOs
     public record ProductDetailDto(
         Guid Id,
         int CategoryId,
+        Guid? StoreId,
         string Name,
         string Slug,
         string? Description,

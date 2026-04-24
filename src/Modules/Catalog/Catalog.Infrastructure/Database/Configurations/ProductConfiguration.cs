@@ -62,5 +62,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .OnDelete(DeleteBehavior.Restrict);
         builder.Property(p => p.PublishedAt)
             .IsRequired(false); // Cho phép Null vì sản phẩm Draft chưa có ngày ra mắt
+        builder.Metadata.FindNavigation(nameof(Product.StoreProducts))!
+           .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

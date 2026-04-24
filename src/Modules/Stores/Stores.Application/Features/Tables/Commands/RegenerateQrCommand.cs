@@ -7,7 +7,7 @@ using Stores.Application.Interfaces;
 namespace Stores.Application.Features.Tables.Commands;
 
 // 1. DTO / Command
-public record RegenerateQrCommand(Guid PublicId, int TableId) : IRequest<Result>;
+public record RegenerateQrCommand(Guid PublicId, int TableId) : ICommand<Result>;
 
 // 2. Validator
 public class RegenerateQrCommandValidator : AbstractValidator<RegenerateQrCommand>
@@ -23,12 +23,10 @@ public class RegenerateQrCommandValidator : AbstractValidator<RegenerateQrComman
 public class RegenerateQrCommandHandler : IRequestHandler<RegenerateQrCommand, Result>
 {
     private readonly IStoreRepository _storeRepository;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public RegenerateQrCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+    public RegenerateQrCommandHandler(IStoreRepository storeRepository)
     {
         _storeRepository = storeRepository;
-        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RegenerateQrCommand request, CancellationToken cancellationToken)
@@ -43,8 +41,6 @@ public class RegenerateQrCommandHandler : IRequestHandler<RegenerateQrCommand, R
             // Gọi Behavior đổi mã QR
             store.RegenerateTableQrCode(request.TableId);
 
-            // Lưu thay đổi xuống DB
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
         catch (InvalidOperationException ex) 

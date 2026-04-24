@@ -17,16 +17,16 @@ namespace Catalog.Presentation.Controllers
             return HandleResult(result);
         }
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetProductByPublicId(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetProductByPublicId(Guid id, [FromQuery] Guid? storeId, CancellationToken cancellationToken)
         {
-            var result = await Mediator.Send(new GetProductByIdQuery(id), cancellationToken);
+            var result = await Mediator.Send(new GetProductByIdQuery(id, storeId), cancellationToken);
             return HandleResult(result);
         }
 
         [HttpGet("{slug}")]
-        public async Task<IActionResult> GetProductBySlug(string slug, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetProductBySlug(string slug, [FromQuery] Guid? storeId, CancellationToken cancellationToken)
         {
-            var result = await Mediator.Send(new GetProductBySlugQuery(slug), cancellationToken);
+            var result = await Mediator.Send(new GetProductBySlugQuery(slug, storeId), cancellationToken);
             return HandleResult(result);
         }
     }

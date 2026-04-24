@@ -19,6 +19,7 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Products
+            .Include(p => p.StoreProducts)
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
             .ThenInclude(pt => pt.Topping)
@@ -53,6 +54,7 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
     {
         return await _context.Products
+             .Include(p => p.StoreProducts)
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
             .ThenInclude(pt => pt.Topping)
@@ -62,6 +64,7 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetBySlugAsync(Slug slug, CancellationToken cancellationToken = default)
     {
         return await _context.Products
+            .Include(p => p.StoreProducts)
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
             .ThenInclude(pt => pt.Topping)
@@ -73,7 +76,7 @@ public class ProductRepository : IProductRepository
     }
 
     public async Task<(List<Product> Items, int TotalCount)> GetPagedListAsync(
-        string? searchTerm, int? categoryId, ProductTypeEnum? type, List<ProductStatusEnum>? statuses,
+        string? searchTerm, int? categoryId, Guid? storeId, ProductTypeEnum? type, List<ProductStatusEnum>? statuses,
         DateTime? fromDate, DateTime? toDate,
         int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -98,7 +101,13 @@ public class ProductRepository : IProductRepository
             query = query.Where(p => p.CategoryId == categoryId.Value);
         }
 
-        // 4. Lọc theo từ khóa tìm kiếm (Name)
+        // 4. Lọc theo cửa hàng
+        if (storeId != null)
+        {
+            query = query.Where(p => p.StoreProducts.Any(sp => sp.StoreId == storeId));
+        }
+
+        // 5. Lọc theo từ khóa tìm kiếm (Name)
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var k = searchTerm.ToLower();
