@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.Interfaces;
 
@@ -11,7 +12,7 @@ namespace Stores.Application.Features.Stores.Commands
         string? Description,
         string? ImageUrl,
         string? PhoneNumber,
-        string? WifiPassword) : IRequest<Result>;
+        string? WifiPassword) : ICommand<Result>;
 
     public class UpdateStoreGeneralInfoCommandValidator : AbstractValidator<UpdateStoreGeneralInfoCommand>
     {

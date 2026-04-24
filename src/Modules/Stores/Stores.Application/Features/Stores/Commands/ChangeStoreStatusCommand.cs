@@ -1,15 +1,16 @@
-﻿using MediatR;
-using Stores.Domain.Enums;
-using Stores.Application.Interfaces;
+﻿using FluentValidation;
+using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
-using FluentValidation;
+using Stores.Application.Interfaces;
+using Stores.Domain.Enums;
 
 namespace Stores.Application.Features.Stores.Commands
 {
     public record ChangeStoreStatusCommand(
         Guid PublicId,
         StoreStatusEnum Status,
-        DateTime? ExpectedOpenDate) : IRequest<Result>;
+        DateTime? ExpectedOpenDate) : ICommand<Result>;
 
     public class ChangeStoreStatusCommandValidator : AbstractValidator<ChangeStoreStatusCommand>
     {

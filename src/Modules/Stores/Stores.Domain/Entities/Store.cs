@@ -209,7 +209,11 @@ public class Store : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
 
         IsDeleted = true;
         Status = StoreStatusEnum.ClosedDown;
-        DeletedAt = DateTime.UtcNow; // Khôi phục DeletedAt
+        DeletedAt = DateTime.UtcNow;
+        foreach(var area in _areas)
+        {
+            area.Delete();
+        }
     }
 
     // ---------------------------
@@ -286,7 +290,7 @@ public class Store : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
     // 2. Quản lý Khu vực (Area)
     public void AddArea(string name)
     {
-        if (_areas.Any(a => a.Name.ToLower() == name.ToLower() && !a.IsDeleted))
+        if (_areas.Any(a => a.Name.ToLower() == name.Trim().ToLowerInvariant() && !a.IsDeleted))
             throw new InvalidOperationException($"Khu vực '{name}' đã tồn tại trong cửa hàng này.");
 
         _areas.Add(new Area(this.Id, name));
@@ -298,7 +302,7 @@ public class Store : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         if (area == null)
             throw new ArgumentException("Không tìm thấy khu vực.");
 
-        if (_areas.Any(a => a.Id != areaId && a.Name.ToLower() == name.ToLower() && !a.IsDeleted))
+        if (_areas.Any(a => a.Id != areaId && a.Name.Trim().ToLowerInvariant() == name.Trim().ToLowerInvariant() && !a.IsDeleted))
             throw new InvalidOperationException($"Khu vực '{name}' đã tồn tại trong cửa hàng này.");
 
         area.UpdateDetails(name, isActive);

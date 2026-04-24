@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.DTOs.Requests;
 using Stores.Application.Interfaces;
@@ -9,7 +10,7 @@ namespace Stores.Application.Features.Stores.Commands
 {
     public record SetStoreOperatingHoursCommand(
             Guid PublicId,
-            List<OperatingHourRequestDto> OperatingHours) : IRequest<Result>;
+            List<OperatingHourRequestDto> OperatingHours) : ICommand<Result>;
 
     public class SetStoreOperatingHoursCommandValidator : AbstractValidator<SetStoreOperatingHoursCommand>
     {

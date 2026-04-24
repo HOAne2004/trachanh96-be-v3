@@ -16,7 +16,7 @@ namespace Stores.Application.Features.Stores.Commands
         double Latitude,
         double Longitude,
         List<OperatingHourRequestDto> OperatingHours
-    ) : IRequest<Result<Guid>>;
+    ) : ICommand<Result<Guid>>;
 
     public class CreateStoreCommandValidator : AbstractValidator<CreateStoreCommand>
     {
@@ -35,7 +35,6 @@ namespace Stores.Application.Features.Stores.Commands
                 .NotEmpty().WithMessage("Địa chỉ không được để trống.")
                 .MaximumLength(200).WithMessage("Địa chỉ không vượt quá 200 ký tự.");
 
-            // Cập nhật Rule Validate tọa độ Việt Nam
             RuleFor(x => x.Latitude)
                 .InclusiveBetween(8.0, 24.0).WithMessage("Vĩ độ phải nằm trong lãnh thổ Việt Nam (8.0 đến 24.0).");
 
@@ -47,7 +46,6 @@ namespace Stores.Application.Features.Stores.Commands
                 .Must(oh => oh.Select(o => o.DayOfWeek).Distinct().Count() == oh.Count)
                 .WithMessage("Mỗi ngày trong tuần chỉ được cấu hình tối đa một lần.");
 
-            // Rule check chéo: Nếu không đóng cửa thì phải có giờ mở/đóng
             RuleForEach(x => x.OperatingHours).ChildRules(hours =>
             {
                 hours.RuleFor(h => h.OpenTime)
@@ -64,12 +62,10 @@ namespace Stores.Application.Features.Stores.Commands
     public class CreateStoreCommandHandler : IRequestHandler<CreateStoreCommand, Result<Guid>>
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly IUnitOfWork _unitOfWork; 
 
-        public CreateStoreCommandHandler(IStoreRepository storeRepository, IUnitOfWork unitOfWork)
+        public CreateStoreCommandHandler(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result<Guid>> Handle(CreateStoreCommand request, CancellationToken cancellationToken)
@@ -99,12 +95,11 @@ namespace Stores.Application.Features.Stores.Commands
 
                 store.SetOperatingHours(schedule);
 
-                // 4. Tuân thủ Hiến pháp: Giao cho Repo Add, UoW Save
                 _storeRepository.Add(store);
 
                 return Result<Guid>.Success(store.PublicId);
             }
-            catch (ArgumentException ex) // Bắt lỗi từ hàm Create() và SetOperatingHours() của Entity
+            catch (ArgumentException ex)
             {
                 return Result<Guid>.Failure($"Dữ liệu không hợp lệ: {ex.Message}");
             }

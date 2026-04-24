@@ -1,7 +1,8 @@
 ﻿using FluentValidation;
 using MediatR;
-using Shared.Domain.ValueObjects;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.ValueObjects;
 using Stores.Application.Interfaces;
 
 namespace Stores.Application.Features.Stores.Commands
@@ -13,7 +14,7 @@ namespace Stores.Application.Features.Stores.Commands
         decimal? BaseFeeAmount,
         string? BaseFeeCurrency,
         decimal? FeePerKmAmount,
-        string? FeePerKmCurrency) : IRequest<Result>;
+        string? FeePerKmCurrency) : ICommand<Result>;
 
     public class UpdateDeliveryPolicyCommandValidator : AbstractValidator<UpdateStoreDeliveryPolicyCommand>
     {

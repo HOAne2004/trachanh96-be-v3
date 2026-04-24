@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.Interfaces;
 
@@ -9,7 +10,7 @@ namespace Stores.Application.Features.Stores.Commands
         Guid PublicId,
         string FullAddress,
         double Latitude,
-        double Longitude) : IRequest<Result>;
+        double Longitude) : ICommand<Result>;
 
     public class UpdateStoreLocationCommandValidator : AbstractValidator<UpdateStoreLocationCommand>
     {

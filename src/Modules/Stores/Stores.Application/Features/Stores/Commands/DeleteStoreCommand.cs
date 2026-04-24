@@ -1,12 +1,12 @@
 ﻿using FluentValidation;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Stores.Application.Interfaces;
 namespace Stores.Application.Features.Stores.Commands
 {
-    public record DeleteStoreCommand(Guid PublicId) : IRequest<Result>;
+    public record DeleteStoreCommand(Guid PublicId) : ICommand<Result>;
 
-    // Thêm cái Validator nhỏ cho chắc chắn
     public class DeleteStoreCommandValidator : AbstractValidator<DeleteStoreCommand>
     {
         public DeleteStoreCommandValidator()
