@@ -11,5 +11,6 @@ public interface IStoreQueryService
     Task<StoreDetailDto?> GetStoreDetailAsync(Guid publicId, CancellationToken cancellationToken = default);
     Task<List<AreaResponseDto>> GetStoreAreasAsync(Guid storePublicId, CancellationToken cancellationToken = default);
     Task<TableQrResponseDto?> GetTableByQrTokenAsync(string token, CancellationToken cancellationToken = default);
-
+    Task<PagedResult<StoreCustomerListDto>> GetPagedCustomerStoresAsync(
+        double? userLat, double? userLng, string? searchTerm, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
 }
