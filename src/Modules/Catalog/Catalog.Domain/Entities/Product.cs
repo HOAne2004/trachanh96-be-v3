@@ -27,8 +27,12 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
 
     public List<IceLevelEnum> AllowedIceLevels { get; private set; } = new();
     public List<SugarLevelEnum> AllowedSugarLevels { get; private set; } = new();
-    public double TotalRating { get; private set; } = 0;
+
+    // Thống kê toàn hệ thống
     public int TotalSold { get; private set; } = 0;
+    public double TotalRatingScore { get; private set; } = 0;
+    public int RatingCount { get; private set; } = 0;
+    public double AverageRating => RatingCount == 0 ? 0 : Math.Round(TotalRatingScore / RatingCount, 1);
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -38,6 +42,7 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
 
     private readonly List<StoreProduct> _storeProducts = new();
     public IReadOnlyCollection<StoreProduct> StoreProducts => _storeProducts;
+
     protected Product()
     {
         Name = null!;
@@ -85,19 +90,20 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         BasePrice = newPrice ?? throw new ArgumentNullException(nameof(newPrice), "Giá cơ sở không được để trống.");
     }
 
-    public void AddOrUpdateSize(SizeEnum size, Money priceOverride)
+    // Đã đổi tên tham số thành priceModifier để đồng nhất
+    public void AddOrUpdateSize(SizeEnum size, Money priceModifier)
     {
-        if (priceOverride == null) throw new ArgumentNullException(nameof(priceOverride));
+        if (priceModifier == null) throw new ArgumentNullException(nameof(priceModifier));
 
         var existingSize = _productSizes.FirstOrDefault(s => s.Size == size);
 
         if (existingSize != null)
         {
-            existingSize.UpdatePrice(priceOverride);
+            existingSize.UpdatePrice(priceModifier);
         }
         else
         {
-            _productSizes.Add(new ProductSize(this.Id, size, priceOverride));
+            _productSizes.Add(new ProductSize(this.Id, size, priceModifier));
         }
     }
 
@@ -113,11 +119,11 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         }
     }
 
+    // Các hàm Topping, Đổi trạng thái, Publish... giữ nguyên như cũ
     public void AddOrUpdateTopping(int toppingId, Money priceOverride, int maxQuantity)
     {
         if (priceOverride == null) throw new ArgumentNullException(nameof(priceOverride));
 
-        // ĐÃ SỬA: Rule bảo vệ (Không cho phép cấu hình quá 5 phần Topping cùng loại cho 1 món)
         if (maxQuantity < 1 || maxQuantity > 5)
             throw new ArgumentException("Số lượng Topping tối đa cho phép cấu hình là từ 1 đến 5.");
 
@@ -144,10 +150,7 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         }
     }
 
-    public void ChangeStatus(ProductStatusEnum newStatus)
-    {
-        Status = newStatus;
-    }
+    public void ChangeStatus(ProductStatusEnum newStatus) => Status = newStatus;
 
     public void Publish()
     {
@@ -160,14 +163,14 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         Status = ProductStatusEnum.Active;
         PublishedAt ??= DateTime.UtcNow;
     }
+
     public void ScheduleLaunch(DateTime scheduledDate)
     {
         if (Status == ProductStatusEnum.Archived)
             throw new InvalidOperationException("Sản phẩm đã lưu trữ không thể hẹn lịch.");
 
-        //Không cho phép hẹn lịch vào quá khứ
         if (scheduledDate <= DateTime.UtcNow)
-            throw new ArgumentException("Ngày ra mắt dự kiến phải trong tương lai. Nếu muốn bán ngay, vui lòng chọn 'Mở bán ngay'.");
+            throw new ArgumentException("Ngày ra mắt dự kiến phải trong tương lai.");
 
         Status = ProductStatusEnum.ComingSoon;
         PublishedAt = scheduledDate;
@@ -183,6 +186,7 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
 
         PublishedAt = newScheduledDate;
     }
+
     public void MarkAsComingSoon()
     {
         if (Status == ProductStatusEnum.Archived)
@@ -199,16 +203,13 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         Status = ProductStatusEnum.Inactive;
     }
 
-    public void Archive()
-    {
-        Status = ProductStatusEnum.Archived;
-    }
+    public void Archive() => Status = ProductStatusEnum.Archived;
 
     public void Delete()
     {
         if (IsDeleted) return;
         IsDeleted = true;
-        Status = ProductStatusEnum.Archived; 
+        Status = ProductStatusEnum.Archived;
     }
 
     public void IncrementSoldQuantity(int quantity)
@@ -216,19 +217,21 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         if (quantity > 0) TotalSold += quantity;
     }
 
-    public void UpdateRating(double newAverageRating)
+    // Đổi logic thành AddRating để tự động tính toán AverageRating
+    public void AddRating(double stars)
     {
-        if (newAverageRating >= 0 && newAverageRating <= 5)
-            TotalRating = newAverageRating;
+        if (stars >= 0 && stars <= 5)
+        {
+            TotalRatingScore += stars;
+            RatingCount++;
+        }
     }
+
     public void UpdateCustomizations(List<IceLevelEnum>? iceLevels, List<SugarLevelEnum>? sugarLevels)
     {
         AllowedIceLevels = iceLevels?.Distinct().ToList() ?? new List<IceLevelEnum>();
         AllowedSugarLevels = sugarLevels?.Distinct().ToList() ?? new List<SugarLevelEnum>();
     }
 
-    public void UpdateCategory(int newCategoryId)
-    {
-        CategoryId = newCategoryId;
-    }
+    public void UpdateCategory(int newCategoryId) => CategoryId = newCategoryId;
 }

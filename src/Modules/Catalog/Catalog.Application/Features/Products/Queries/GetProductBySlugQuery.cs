@@ -36,8 +36,8 @@ namespace Catalog.Application.Features.Products.Queries
 
             var sizes = product.ProductSizes.Select(s => new ProductSizeDto(
                 Size: s.Size.ToString(),
-                PriceAmount: s.PriceOverride.Amount,
-                Currency: s.PriceOverride.Currency)).ToList();
+                PriceAmount: s.PriceModifier.Amount,
+                Currency: s.PriceModifier.Currency)).ToList();
 
             var toppings = product.ProductToppings.Select(t => new ProductToppingDto(
                 ToppingId: t.ToppingId,
@@ -58,21 +58,21 @@ namespace Catalog.Application.Features.Products.Queries
                 ImageUrl: product.ImageUrl,
                 ProductType: product.ProductType.ToString(),
 
-                // LOGIC GIÁ BÁN: Ưu tiên giá của quán, không có thì lấy giá gốc
                 BasePriceAmount: storeInfo?.PriceOverride ?? product.BasePrice.Amount,
                 BasePriceCurrency: product.BasePrice.Currency,
 
                 PrepTimeInMinutes: product.BasePrepTimeInMinutes,
-
-                // LOGIC TRẠNG THÁI: Quán báo hết hàng thì trả về OutOfStock
                 Status: (storeInfo != null && !storeInfo.IsAvailable) ? "OutOfStock" : product.Status.ToString(),
 
                 AllowedIceLevels: product.AllowedIceLevels.Select(x => x.ToString()).ToList(),
                 AllowedSugarLevels: product.AllowedSugarLevels.Select(x => x.ToString()).ToList(),
                 Sizes: sizes,
                 Toppings: toppings,
-                TotalSold: product.TotalSold,
-                TotalRating: product.TotalRating,
+
+                TotalSold: storeInfo != null ? storeInfo.SoldCount : product.TotalSold,
+                AverageRating: storeInfo != null ? storeInfo.AverageRating : product.AverageRating,
+                RatingCount: storeInfo != null ? storeInfo.RatingCount : product.RatingCount,
+
                 PublishedAt: product.PublishedAt,
                 CreatedAt: product.CreatedAt);
 

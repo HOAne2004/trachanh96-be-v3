@@ -38,7 +38,8 @@ namespace Catalog.Application.DTOs
         List<ProductSizeDto> Sizes,
         List<ProductToppingDto> Toppings,
         int TotalSold,
-        double TotalRating,
+        double AverageRating,
+        int RatingCount,
         DateTime? PublishedAt,
         DateTime? CreatedAt
     );

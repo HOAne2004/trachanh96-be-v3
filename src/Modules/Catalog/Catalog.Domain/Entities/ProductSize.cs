@@ -6,24 +6,25 @@ namespace Catalog.Domain.Entities;
 public class ProductSize
 {
     public int ProductId { get; private set; }
-    public SizeEnum Size{ get; private set; }
+    public SizeEnum Size { get; private set; }
 
-    public Money PriceOverride { get; private set; }
+    // Đổi tên thành PriceModifier để tránh nhầm lẫn với Override giá gốc
+    public Money PriceModifier { get; private set; }
 
     protected ProductSize()
     {
-        PriceOverride = null!;
+        PriceModifier = null!;
     }
 
-    internal ProductSize(int productId, SizeEnum size, Money priceOverride)
+    internal ProductSize(int productId, SizeEnum size, Money priceModifier)
     {
         ProductId = productId;
         Size = size;
-        PriceOverride = priceOverride;
+        PriceModifier = priceModifier;
     }
 
-    internal void UpdatePrice(Money newPrice)
+    internal void UpdatePrice(Money newModifierPrice)
     {
-        PriceOverride = newPrice;
+        PriceModifier = newModifierPrice;
     }
 }

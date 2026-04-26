@@ -18,14 +18,14 @@ public class ProductSizeConfiguration : IEntityTypeConfiguration<ProductSize>
             .HasMaxLength(10);
 
         // Map Value Object Money cho PriceOverride
-        builder.OwnsOne(x => x.PriceOverride, priceBuilder =>
+        builder.OwnsOne(x => x.PriceModifier, priceBuilder =>
         {
             priceBuilder.Property(m => m.Amount)
-                .HasColumnName("PriceOverride_Amount")
+                .HasColumnName("PriceModifier_Amount")
                 .HasPrecision(18, 2);
 
             priceBuilder.Property(m => m.Currency)
-                .HasColumnName("PriceOverride_Currency")
+                .HasColumnName("PPriceModifier_Currency")
                 .HasMaxLength(3);
         });
     }

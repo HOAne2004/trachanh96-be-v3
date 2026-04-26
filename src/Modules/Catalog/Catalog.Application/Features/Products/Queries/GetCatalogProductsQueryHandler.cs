@@ -14,7 +14,8 @@ public record CustomerProductCardDto(
     decimal BasePrice,
     string Currency,
     int TotalSold,
-    double TotalRating,
+    double AverageRating,
+    int RatingCount,
     DateTime? PublishedAt,
     DateTime CreatedAt,
     string status
@@ -70,19 +71,18 @@ public class GetCatalogProductsQueryHandler : IRequestHandler<GetCatalogProducts
                 Slug: p.Slug.Value,
                 ImageUrl: p.ImageUrl,
 
-                // 2. LOGIC GIÁ: Ưu tiên giá riêng của quán (PriceOverride), nếu null thì lấy giá gốc
                 BasePrice: storeInfo?.PriceOverride ?? p.BasePrice.Amount,
-
                 Currency: p.BasePrice.Currency,
-                TotalSold: p.TotalSold,
-                TotalRating: p.TotalRating,
+
+                TotalSold: storeInfo != null ? storeInfo.SoldCount : p.TotalSold,
+                AverageRating: storeInfo != null ? storeInfo.AverageRating : p.AverageRating,
+                RatingCount: storeInfo != null ? storeInfo.RatingCount : p.RatingCount,
+
                 CreatedAt: p.CreatedAt,
                 PublishedAt: p.PublishedAt,
-
-                // 3. LOGIC TRẠNG THÁI: Nếu quán báo hết hàng -> Trả về "OutOfStock", ngược lại dùng trạng thái gốc
                 status: (storeInfo != null && !storeInfo.IsAvailable) ? "OutOfStock" : p.Status.ToString()
             );
-        }).ToList();
+                }).ToList();
 
         return Result<PagedResult<CustomerProductCardDto>>.Success(
             new PagedResult<CustomerProductCardDto>(dtos, totalCount, pageIndex, pageSize));
