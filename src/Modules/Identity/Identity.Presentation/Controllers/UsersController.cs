@@ -1,7 +1,9 @@
-﻿using Identity.Application.Features.Users.Commands;
+﻿using Identity.Application.Features.Auth.Commands;
+using Identity.Application.Features.Users.Commands;
 using Identity.Application.Features.Users.Queries; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Shared.Application.Models;
 using Shared.Presentation.Controllers;
 using System.Security.Claims;
@@ -27,6 +29,23 @@ public class UsersController : BaseApiController
             return Unauthorized(new ErrorResponse("INVALID_TOKEN", "Token không hợp lệ."));
 
         var result = await Mediator.Send(new GetProfileQuery(publicId));
+        return HandleResult(result);
+    }
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        // Lấy UserPublicId từ claims (đã được set trong token khi login)
+        var userPublicIdClaim = User.FindFirst("PublicId")?.Value
+                                 ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        if (string.IsNullOrEmpty(userPublicIdClaim) || !Guid.TryParse(userPublicIdClaim, out Guid userPublicId))
+        {
+            return BadRequest(new { message = "Không thể xác định người dùng từ token" });
+        }
+
+        var command = new LogoutCommand(userPublicId);
+        var result = await Mediator.Send(command);
+
         return HandleResult(result);
     }
 
@@ -56,10 +75,12 @@ public class UsersController : BaseApiController
     }
 
     [HttpPost("verify-email")]
-    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+    public async Task<IActionResult> VerifyEmail([FromBody] Application.Features.Users.Commands.VerifyEmailCommand command)
     {
         var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
         var result = await Mediator.Send(secureCommand);
         return HandleResult(result);
     }
+
+
 }

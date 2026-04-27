@@ -1,5 +1,6 @@
 ﻿using Identity.Application.Interfaces;
 using Identity.Infrastructure.Database;
+using Identity.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

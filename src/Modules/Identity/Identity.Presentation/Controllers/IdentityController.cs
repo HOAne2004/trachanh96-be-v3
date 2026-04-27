@@ -1,8 +1,10 @@
 ﻿using Identity.Application.Features.Auth;
 using Identity.Application.Features.Auth.Commands;
+using Identity.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Shared.Presentation.Controllers;
 
 namespace Identity.Presentation.Controllers;
@@ -45,4 +47,12 @@ public class AuthController : BaseApiController
         var result = await Mediator.Send(command);
         return HandleResult(result, "Xác thực email thành công!");
     }
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
+    {
+        var result = await Mediator.Send(command);
+        return HandleResult(result);
+    }
+    
 }

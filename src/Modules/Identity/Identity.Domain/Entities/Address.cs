@@ -82,6 +82,4 @@ public class Address : Entity<int>, IAuditableEntity
     }
     internal void SetAsDefault() => IsDefault = true;
     internal void RemoveDefault() => IsDefault = false;
-
-
 }

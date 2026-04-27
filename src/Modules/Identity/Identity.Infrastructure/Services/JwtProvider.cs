@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Identity.Infrastructure.Services;
@@ -17,7 +18,8 @@ public class JwtProvider : IJwtProvider
         _config = config;
     }
 
-    public string Generate(User user)
+    // 1. Tạo Access Token (thời gian sống ngắn: 15-30 phút)
+    public string GenerateAccessToken(User user)
     {
         var secretKey = _config["JwtSettings:Key"];
         if (string.IsNullOrEmpty(secretKey))
@@ -30,6 +32,7 @@ public class JwtProvider : IJwtProvider
             new Claim(JwtRegisteredClaimNames.Sub, user.PublicId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("UserId", user.Id.ToString()),
+            new Claim("PublicId", user.PublicId.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
             new Claim(ClaimTypes.Email, user.Email.Value),
             new Claim(ClaimTypes.Role, user.Role.ToString())
@@ -41,7 +44,7 @@ public class JwtProvider : IJwtProvider
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(360), // Token sống 6 tiếng
+            Expires = DateTime.UtcNow.AddMinutes(15), // Access Token sống 15 phút
             SigningCredentials = creds,
             Issuer = _config["JwtSettings:Issuer"],
             Audience = _config["JwtSettings:Audience"]
@@ -51,5 +54,20 @@ public class JwtProvider : IJwtProvider
         var token = tokenHandler.CreateToken(tokenDescriptor);
 
         return tokenHandler.WriteToken(token);
+    }
+
+    // 2. Tạo Refresh Token (chuỗi ngẫu nhiên)
+    public string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    // 3. Thời gian hết hạn của Refresh Token (7 ngày)
+    public DateTime GetRefreshTokenExpiry()
+    {
+        return DateTime.UtcNow.AddDays(7);
     }
 }

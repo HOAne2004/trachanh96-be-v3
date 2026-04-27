@@ -251,4 +251,26 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         LockoutEnd = null;
         FailedLoginAttempts = 0; // Reset luôn số đếm để user đăng nhập lại từ đầu
     }
+
+    // Identity.Domain/Entities/User.cs - Thêm method này
+    public void UpdateRefreshToken(string refreshToken, DateTime expiryTime)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            throw new ArgumentException("Refresh token không hợp lệ");
+
+        RefreshToken = refreshToken;
+        RefreshTokenExpiryTime = expiryTime;
+    }
+
+    public void RevokeRefreshToken()
+    {
+        RefreshToken = null;
+        RefreshTokenExpiryTime = null;
+    }
+
+    public bool IsRefreshTokenValid(string refreshToken)
+    {
+        return RefreshToken == refreshToken &&
+               RefreshTokenExpiryTime > DateTime.UtcNow;
+    }
 }

@@ -90,5 +90,11 @@ namespace Identity.Infrastructure.Repositories
 
             return (users, totalCount);
         }
+
+        public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken, cancellationToken);
+        }
     }
 }

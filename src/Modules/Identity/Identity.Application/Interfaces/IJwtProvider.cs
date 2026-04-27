@@ -3,6 +3,8 @@ namespace Identity.Application.Interfaces
 {
     public interface IJwtProvider
     {
-        string Generate(User user);
+        string GenerateAccessToken(User user);
+        string GenerateRefreshToken();
+        DateTime GetRefreshTokenExpiry();
     }
 }

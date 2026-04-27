@@ -12,4 +12,7 @@ public interface IUserRepository
     Task<(IEnumerable<User> Users, int TotalCount)> GetPaginatedAsync(
     int pageIndex, int pageSize, string? searchTerm, string? role, string? status, CancellationToken cancellationToken);
 
+    Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+
+
 }
