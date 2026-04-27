@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Orders.Application.Interfaces;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
@@ -10,7 +11,7 @@ namespace Orders.Application.Features.Commands;
 public record ConfirmOrderCommand(
     Guid OrderId,
     Guid StaffId 
-) : IRequest<Result<bool>>;
+) : ICommand<Result<bool>>;
 
 // 2. VALIDATOR
 public class ConfirmOrderCommandValidator : AbstractValidator<ConfirmOrderCommand>
@@ -37,17 +38,11 @@ public class ConfirmOrderCommandHandler : IRequestHandler<ConfirmOrderCommand, R
         try
         {
             var order = await _orderRepository.GetByIdAsync(request.OrderId, cancellationToken);
-            if (order == null)
-                return Result<bool>.Failure("Không tìm thấy đơn hàng.");
+            if (order == null) return Result<bool>.Failure("Không tìm thấy đơn hàng.");
 
-            // Gọi logic Domain (Sẽ tự động bắn event OrderPreparingDomainEvent)
-            order.StartPreparing(request.StaffId);
+            order.Confirm(request.StaffId);
 
             return Result<bool>.Success(true);
-        }
-        catch (InvalidOperationException ex) // Trong Order.cs bạn đang dùng InvalidOperationException cho hàm này
-        {
-            return Result<bool>.Failure(ex.Message);
         }
         catch (DomainException ex)
         {

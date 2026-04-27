@@ -10,7 +10,8 @@ namespace Orders.Domain.Enums
         Confirmed = 5,
         Preparing = 6,
         Ready= 7,
-        Completed = 8,
-        Cancelled = 9,
+        Shipping = 8,
+        Completed = 9,
+        Cancelled = 10,
     }
 }

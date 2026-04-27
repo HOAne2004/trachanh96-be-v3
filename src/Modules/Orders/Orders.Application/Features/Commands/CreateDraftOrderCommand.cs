@@ -2,6 +2,7 @@
 using MediatR;
 using Orders.Application.Interfaces;
 using Orders.Domain.Enums;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
@@ -13,7 +14,7 @@ public record CreateDraftOrderCommand(
     Guid? CustomerId,
     OrderTypeEnum OrderType,
     string Currency = "VND"
-) : IRequest<Result<Guid>>;
+) : ICommand<Result<Guid>>;
 
 // 2. Validator (Gatekeeper)
 public class CreateDraftOrderCommandValidator : AbstractValidator<CreateDraftOrderCommand>
@@ -37,7 +38,6 @@ public class CreateDraftOrderCommandValidator : AbstractValidator<CreateDraftOrd
 public class CreateDraftOrderCommandHandler : IRequestHandler<CreateDraftOrderCommand, Result<Guid>>
 {
     private readonly IOrderRepository _orderRepository;
-    // BỎ Inject IUnitOfWork vì TransactionBehavior (Pipeline) sẽ lo việc commit.
 
     public CreateDraftOrderCommandHandler(IOrderRepository orderRepository)
     {
@@ -62,9 +62,6 @@ public class CreateDraftOrderCommandHandler : IRequestHandler<CreateDraftOrderCo
 
             // 2. Gọi AddAsync (Đồng bộ interface Repository theo chuẩn Async)
              _orderRepository.Add(order);
-
-            // 3. KHÔNG GỌI SaveChanges() Ở ĐÂY NỮA!
-            // Pipeline Behavior sẽ tự động bắt lấy request này, gọi next(), và commit Transaction.
 
             return Result<Guid>.Success(order.Id);
         }

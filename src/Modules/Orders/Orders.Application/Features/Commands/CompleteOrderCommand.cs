@@ -2,12 +2,13 @@
 using FluentValidation;
 using MediatR;
 using Orders.Application.Interfaces;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
 namespace Orders.Application.Features.Commands
 {
-    public record CompleteOrderCommand(Guid OrderId): IRequest<Result<bool>>;
+    public record CompleteOrderCommand(Guid OrderId): ICommand<Result<bool>>;
 
     public class CompleteOrderCommandValidator : AbstractValidator<CompleteOrderCommand>
     {

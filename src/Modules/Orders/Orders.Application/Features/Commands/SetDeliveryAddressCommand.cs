@@ -3,6 +3,7 @@ using MediatR;
 using Orders.Application.Interfaces;
 using Orders.Application.Interfaces.ExternalServices;
 using Orders.Domain.ValueObjects;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 using Shared.Domain.Utilities;
@@ -16,7 +17,7 @@ namespace Orders.Application.Features.Commands
     public record SetDeliveryAddressCommand(
         Guid OrderId,
         int AddressId // Dùng Int vì Identity.Address của bạn đang xài PK là int
-    ) : IRequest<Result<Guid>>;
+    ) : ICommand<Result<Guid>>;
 
     // =========================================================
     // 2. VALIDATOR (KIỂM TRA ĐẦU VÀO CƠ BẢN)

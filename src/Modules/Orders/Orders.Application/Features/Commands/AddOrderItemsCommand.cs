@@ -4,6 +4,7 @@ using MediatR;
 using Orders.Application.Interfaces;
 using Orders.Application.Interfaces.ExternalServices;
 using Orders.Domain.ValueObjects;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Enums;
 using Shared.Domain.Exceptions;
@@ -22,11 +23,11 @@ namespace Orders.Application.Features.Commands
         );
     public record AddOrderItemsCommand(
         Guid OrderId,
-        List<OrderItemRequest> Items) : IRequest<Result<Guid>>;
+        List<OrderItemRequest> Items) : ICommand<Result<Guid>>;
 
-    public class AddOrdersItemCommandValidator : AbstractValidator<AddOrderItemsCommand>
+    public class AddOrderItemCommandValidator : AbstractValidator<AddOrderItemsCommand>
     {
-        public AddOrdersItemCommandValidator()
+        public AddOrderItemCommandValidator()
         {
             RuleFor(x => x.OrderId).NotEmpty();
             RuleFor(x => x.Items).NotEmpty().Must(x => x.Count <= 50);

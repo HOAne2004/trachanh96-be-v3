@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using Orders.Application.Interfaces;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
@@ -12,7 +13,7 @@ namespace Orders.Application.Features.Commands
         string Reason,
         Guid? CancelledBy,
         bool IsStaffOverride = false // Cờ xác định ai đang gọi lệnh này (Controller sẽ tự map dựa vào Role của Token)}
-         ) : IRequest<Result<bool>>;
+         ) : ICommand<Result<bool>>;
 
     public class CancelOrderCommandVidator : AbstractValidator<CancelOrderCommand>
     {

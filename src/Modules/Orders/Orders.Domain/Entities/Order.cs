@@ -283,7 +283,6 @@ public class Order : AggregateRoot<Guid>, IAuditableEntity
         AddDomainEvent(new OrderCheckedOutDomainEvent(
             Id, OrderCode, FinalTotal.Amount, Currency, paymentMethodId));
     }
-
     public void MarkAsPaid(string transactionId)
     {
         if (PaymentStatus == PaymentStatusEnum.Paid) return;
@@ -299,13 +298,24 @@ public class Order : AggregateRoot<Guid>, IAuditableEntity
         AddDomainEvent(new OrderPaidDomainEvent(
             Id, OrderCode, transactionId, CustomerId, FinalTotal.Amount));
     }
+    public void Confirm(Guid? staffId)
+    {
+        // Chỉ xác nhận khi đơn đang ở trạng thái Pending (đã thanh toán hoặc đơn COD đã đặt)
+        if (OrderStatus != OrderStatusEnum.Pending)
+            throw new DomainException($"Không thể xác nhận đơn hàng từ trạng thái {OrderStatus}");
+
+        ChangeStatus(OrderStatusEnum.Confirmed, "Đơn hàng đã được nhân viên xác nhận", staffId);
+
+        // Bắn event
+        AddDomainEvent(new OrderConfirmedDomainEvent(Id, OrderCode, CustomerId));
+    }
     public void StartPreparing(Guid? staffId)
     {
-        if (OrderStatus != OrderStatusEnum.Pending)
-            throw new InvalidOperationException("Chỉ đơn đã thanh toán mới được chuẩn bị.");
+        // Logic: Phải qua bước Confirmed mới được Preparing
+        if (OrderStatus != OrderStatusEnum.Confirmed)
+            throw new DomainException("Đơn hàng cần được xác nhận trước khi đưa vào chế biến.");
 
-        ChangeStatus(OrderStatusEnum.Preparing, "Bắt đầu chuẩn bị", staffId);
-
+        ChangeStatus(OrderStatusEnum.Preparing, "Đầu bếp bắt đầu chế biến", staffId);
         AddDomainEvent(new OrderPreparingDomainEvent(Id, OrderCode));
     }
     public void MarkAsReady(Guid? staffId)
@@ -317,14 +327,29 @@ public class Order : AggregateRoot<Guid>, IAuditableEntity
 
         AddDomainEvent(new OrderReadyDomainEvent(Id, OrderCode, CustomerId));
     }
-    public void Complete()
+    public void Ship(Guid? staffId)
     {
+        if (OrderType != OrderTypeEnum.Delivery)
+            throw new DomainException("Chỉ đơn giao hàng mới có trạng thái đang vận chuyển.");
+
         if (OrderStatus != OrderStatusEnum.Ready)
-            throw new InvalidOperationException("Chỉ những đơn đã sẵn sàng mới có thể hoàn tất.");
+            throw new DomainException("Đơn hàng phải ở trạng thái Sẵn sàng mới có thể bắt đầu giao.");
 
-        CompletedAt = DateTime.UtcNow;
+        ChangeStatus(OrderStatusEnum.Shipping, "Đơn hàng đang được giao đến bạn", null);
 
-        ChangeStatus(OrderStatusEnum.Completed, "Hoàn tất", null);
+        AddDomainEvent(new OrderShippedDomainEvent(Id, OrderCode, CustomerId));
+    }
+
+    public void Complete(Guid? by = null)
+    {
+        if (OrderType == OrderTypeEnum.Delivery && OrderStatus != OrderStatusEnum.Shipping)
+            throw new DomainException("Đơn giao hàng cần được chuyển sang trạng thái 'Đang giao' (Shipping) trước khi hoàn tất.");
+
+        if ((OrderType == OrderTypeEnum.DineIn || OrderType == OrderTypeEnum.Takeaway) && OrderStatus != OrderStatusEnum.Ready)
+            throw new DomainException("Đơn tại quán hoặc mang về phải ở trạng thái 'Sẵn sàng' (Ready) mới có thể hoàn tất.");
+
+        ChangeStatus(OrderStatusEnum.Completed, "Đơn hàng đã được giao đến khách hàng thành công", by);
+        AddDomainEvent(new OrderCompletedDomainEvent(Id, OrderCode, CustomerId));
     }
     public void MarkPaymentFailed(string reason)
     {

@@ -2,6 +2,7 @@
 using MediatR;
 using Orders.Application.Interfaces;
 using Orders.Application.Interfaces.ExternalServices;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
@@ -13,7 +14,7 @@ namespace Orders.Application.Features.Commands
     public record SetDineInTableCommand(
         Guid OrderId,
         Guid TableId // Khách quét mã QR tại bàn, App sẽ gửi TableId này lên
-    ) : IRequest<Result<Guid>>;
+    ) : ICommand<Result<Guid>>;
 
     // =========================================================
     // 2. VALIDATOR

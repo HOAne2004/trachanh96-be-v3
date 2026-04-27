@@ -2,16 +2,14 @@
 using MediatR;
 using Orders.Application.Interfaces;
 using Orders.Application.Interfaces.ExternalServices;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Orders.Application.Features.Commands
 {
     // 1. Command (Chỉ nhận duy nhất OrderId và Mã Code)
-    public record ApplyVoucherCommand(Guid OrderId, string VoucherCode) : IRequest<Result<Guid>>;
+    public record ApplyVoucherCommand(Guid OrderId, string VoucherCode) : ICommand<Result<Guid>>;
 
     // 2. Validator
     public class ApplyVoucherCommandValidator : AbstractValidator<ApplyVoucherCommand>

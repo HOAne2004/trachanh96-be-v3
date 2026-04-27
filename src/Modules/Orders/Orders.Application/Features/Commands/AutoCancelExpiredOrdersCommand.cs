@@ -2,11 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using Orders.Application.Interfaces;
 using Orders.Domain.Enums;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Orders.Application.Features.Commands;
 
-public record AutoCancelExpiredOrdersCommand : IRequest<Result<int>>;
+public record AutoCancelExpiredOrdersCommand : ICommand<Result<int>>;
 
 public class AutoCancelExpiredOrdersCommandHandler : IRequestHandler<AutoCancelExpiredOrdersCommand, Result<int>>
 {
