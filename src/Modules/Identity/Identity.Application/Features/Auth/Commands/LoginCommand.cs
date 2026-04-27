@@ -84,7 +84,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         }
 
         // 3. Kiểm tra mật khẩu
-        if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+        if (!_passwordHasher.Verify(user.PasswordHash, request.Password))
         {
             // TODO: Tăng FailedLoginAttempts
             return Result<LoginResponseDto>.Failure("Email hoặc mật khẩu không đúng");
