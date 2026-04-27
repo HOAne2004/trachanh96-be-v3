@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Orders.Application.Features.Commands;
 using Orders.Application.Features.Queries;
 using Orders.Domain.Enums;
+using Shared.Presentation.Controllers; // Nhớ using namespace chứa BaseApiController
 using System.Security.Claims;
 
 namespace Orders.Presentation.Controllers;
@@ -11,14 +12,8 @@ namespace Orders.Presentation.Controllers;
 [ApiController]
 [Route("api/orders")]
 [Authorize]
-public class OrdersController : ControllerBase
+public class OrdersController : BaseApiController
 {
-    private readonly ISender _sender;
-    public OrdersController(ISender sender)
-    {
-        _sender = sender;
-    }
-
     private Guid? GetUserIdFromToken()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -31,29 +26,29 @@ public class OrdersController : ControllerBase
         var currentUserId = GetUserIdFromToken();
         var finalCommand = currentUserId.HasValue ? command with { CustomerId = currentUserId } : command;
 
-        var result = await _sender.Send(finalCommand, cancellationToken);
-        return result.IsSuccess ? Ok(new { OrderId = result.Value }) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(finalCommand, cancellationToken);
+        return HandleResult(result, "Tạo đơn nháp thành công!");
     }
 
     [HttpPost("{id:guid}/items")]
     public async Task<IActionResult> AddOrderItems(Guid id, [FromBody] List<OrderItemRequest> items, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new AddOrderItemsCommand(id, items), cancellationToken);
-        return result.IsSuccess ? Ok(new { Message = "Cập nhật giỏ hàng thành công!" }) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new AddOrderItemsCommand(id, items), cancellationToken);
+        return HandleResult(result, "Cập nhật giỏ hàng thành công!");
     }
 
     [HttpPut("{id:guid}/delivery-address")]
     public async Task<IActionResult> SetDeliveryAddress(Guid id, [FromBody] int addressId, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new SetDeliveryAddressCommand(id, addressId), cancellationToken);
-        return result.IsSuccess ? Ok(new { Message = "Cập nhật địa chỉ thành công!" }) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new SetDeliveryAddressCommand(id, addressId), cancellationToken);
+        return HandleResult(result, "Cập nhật địa chỉ thành công!");
     }
 
     [HttpPut("{id:guid}/dine-in-table")]
     public async Task<IActionResult> SetDineInTable(Guid id, [FromBody] Guid tableId, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new SetDineInTableCommand(id, tableId), cancellationToken);
-        return result.IsSuccess ? Ok(new { Message = "Cập nhật bàn thành công!" }) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new SetDineInTableCommand(id, tableId), cancellationToken);
+        return HandleResult(result, "Cập nhật bàn thành công!");
     }
 
     [HttpPost("{id:guid}/checkout")]
@@ -61,22 +56,22 @@ public class OrdersController : ControllerBase
     {
         if (idempotencyKey == Guid.Empty) return BadRequest(new { Message = "Thiếu Idempotency-Key trên Header." });
 
-        var result = await _sender.Send(new CheckoutOrderCommand(id, paymentMethodId, idempotencyKey), cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new CheckoutOrderCommand(id, paymentMethodId, idempotencyKey), cancellationToken);
+        return HandleResult(result, "Chốt đơn thành công!");
     }
 
     [HttpPost("{id:guid}/cancel")]
     public async Task<IActionResult> CancelOrder(Guid id, [FromBody] string reason, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new CancelOrderCommand(id, reason, GetUserIdFromToken(), IsStaffOverride: false), cancellationToken);
-        return result.IsSuccess ? Ok(new { Message = "Hủy đơn thành công!" }) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new CancelOrderCommand(id, reason, GetUserIdFromToken(), IsStaffOverride: false), cancellationToken);
+        return HandleResult(result, "Hủy đơn thành công!");
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetOrderById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new GetOrderByIdQuery(id), cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : NotFound(new { Message = result.Error });
+        var result = await Mediator.Send(new GetOrderByIdQuery(id), cancellationToken);
+        return HandleResult(result, "Lấy thông tin đơn hàng thành công!");
     }
 
     [HttpGet("history")]
@@ -85,7 +80,17 @@ public class OrdersController : ControllerBase
         var customerId = GetUserIdFromToken();
         if (customerId == null) return Unauthorized();
 
-        var result = await _sender.Send(new GetCustomerOrderHistoryQuery(customerId.Value, status, pageIndex, pageSize), cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { Message = result.Error });
+        var result = await Mediator.Send(new GetCustomerOrderHistoryQuery(customerId.Value, status, pageIndex, pageSize), cancellationToken);
+        return HandleResult(result, "Lấy lịch sử đơn hàng thành công!");
+    }
+
+    [HttpGet("active-cart")]
+    public async Task<IActionResult> GetActiveCart([FromQuery] Guid storeId, CancellationToken cancellationToken)
+    {
+        var customerId = GetUserIdFromToken();
+        if (customerId == null) return Unauthorized();
+
+        var result = await Mediator.Send(new GetActiveCartQuery(customerId.Value, storeId), cancellationToken);
+        return HandleResult(result, "Lấy giỏ hàng thành công!");
     }
 }
