@@ -13,22 +13,16 @@ namespace Orders.Infrastructure.Database.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.ProductName).HasMaxLength(255).IsRequired();
-
-            builder.Property(x => x.SizeName)
-               .HasConversion<string>()
-               .HasMaxLength(20);
-
-            builder.Property(x => x.IceLevel)
-               .HasConversion<string>()
-               .HasMaxLength(20);
-
-            builder.Property(x => x.SugarLevel)
-                   .HasConversion<string>()
-                   .HasMaxLength(20);
-
             builder.Property(x => x.Notes).HasMaxLength(500);
 
-            // 1. Dùng OwnsOne thay cho ComplexProperty (Tương thích mọi version EF Core)
+            // ==========================================
+            // [CẬP NHẬT] ENUM DẠNG STRING (Bạn đã làm đúng phần này)
+            // ==========================================
+            builder.Property(x => x.SizeName).HasConversion<string>().HasMaxLength(20);
+            builder.Property(x => x.IceLevel).HasConversion<string>().HasMaxLength(20);
+            builder.Property(x => x.SugarLevel).HasConversion<string>().HasMaxLength(20);
+
+            // 1. Dùng OwnsOne thay cho ComplexProperty
             builder.OwnsOne(x => x.UnitPrice, p =>
             {
                 p.Property(m => m.Amount).HasColumnName("UnitPriceAmount").HasPrecision(18, 2);
@@ -41,17 +35,12 @@ namespace Orders.Infrastructure.Database.Configurations
                 p.Property(m => m.Currency).HasColumnName("TotalPriceCurrency").HasMaxLength(3);
             });
 
-            // ==========================================
-            // 2. SỨC MẠNH CỦA POSTGRESQL: JSONB COLUMN
-            // ==========================================
+            // 2. JSONB COLUMN
             builder.OwnsMany(x => x.Toppings, t =>
             {
-                // Lệnh này nói với EF Core: "Hãy nén toàn bộ list Toppings thành cục JSON lưu vào 1 cột trong bảng OrderItems"
                 t.ToJson();
-
                 t.Property(x => x.ToppingName).HasMaxLength(255).IsRequired();
 
-                // Map Value Object Money bên trong JSON
                 t.OwnsOne(x => x.Price, p =>
                 {
                     p.Property(m => m.Amount);

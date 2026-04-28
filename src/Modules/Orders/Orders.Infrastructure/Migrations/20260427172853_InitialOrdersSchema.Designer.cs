@@ -9,11 +9,11 @@ using Orders.Infrastructure.Database;
 
 #nullable disable
 
-namespace Orders.Infrastructure.Database.Migrations
+namespace Orders.Infrastructure.Migrations
 {
     [DbContext(typeof(OrdersDbContext))]
-    [Migration("20260408182533_AddDeliveryInfoToOrder")]
-    partial class AddDeliveryInfoToOrder
+    [Migration("20260427172853_InitialOrdersSchema")]
+    partial class InitialOrdersSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,11 +63,15 @@ namespace Orders.Infrastructure.Database.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderType")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
@@ -75,8 +79,10 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsRequired()
@@ -91,8 +97,9 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("VoucherDiscountType")
-                        .HasColumnType("integer");
+                    b.Property<string>("VoucherDiscountType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<decimal?>("VoucherDiscountValue")
                         .HasColumnType("numeric");
@@ -171,8 +178,9 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("ChangedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("FromStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
@@ -181,8 +189,10 @@ namespace Orders.Infrastructure.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("ToStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 

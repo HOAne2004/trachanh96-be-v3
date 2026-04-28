@@ -7,6 +7,7 @@ public class OrderItemTopping : ValueObject
 {
     public Guid ToppingId { get; }
     public string ToppingName { get; }
+    public string? ImageUrl { get; } = null;
     public Money Price { get; }
     public int Quantity { get; }
 

@@ -10,10 +10,10 @@ namespace Orders.Application.Features.Queries
     // ==========================================
     // 1. DTOs (Chỉ lấy những thông tin cần cho Giỏ hàng)
     // ==========================================
-    public record CartItemToppingResponse(Guid ToppingId, string ToppingName, decimal Price, int Quantity);
+    public record CartItemToppingResponse(Guid ToppingId, string ToppingName, string? ImageUrl, decimal Price, int Quantity);
 
     public record CartItemResponse(
-        Guid ProductId, string ProductName, SizeEnum Size, IceLevelEnum? IceLevel, SugarLevelEnum? SugarLevel,
+        Guid ProductId, string ProductName, string? ImageUrl, SizeEnum Size, IceLevelEnum? IceLevel, SugarLevelEnum? SugarLevel,
         decimal UnitPrice, int Quantity, decimal TotalPrice, string? Notes,
         List<CartItemToppingResponse> Toppings
     );
@@ -49,10 +49,10 @@ namespace Orders.Application.Features.Queries
                     o.Id, o.OrderCode, o.StoreId, o.CustomerId, o.OrderType,
                     o.SubTotal.Amount, o.ShippingFee.Amount, o.DiscountAmount.Amount, o.FinalTotal.Amount, o.Currency,
                     o.Items.Select(i => new CartItemResponse(
-                        i.ProductId, i.ProductName, i.SizeName, i.IceLevel, i.SugarLevel,
+                        i.ProductId, i.ProductName,i.ImageUrl, i.SizeName, i.IceLevel, i.SugarLevel,
                         i.UnitPrice.Amount, i.Quantity, i.TotalPrice.Amount, i.Notes,
                         i.Toppings.Select(t => new CartItemToppingResponse(
-                            t.ToppingId, t.ToppingName, t.Price.Amount, t.Quantity)).ToList()
+                            t.ToppingId, t.ToppingName, t.ImageUrl, t.Price.Amount, t.Quantity)).ToList()
                     )).ToList()
                 ))
                 .FirstOrDefaultAsync(cancellationToken);

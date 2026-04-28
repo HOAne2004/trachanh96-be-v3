@@ -11,6 +11,7 @@ public class OrderItem : Entity<Guid>
     public Guid OrderId { get; private set; }
     public Guid ProductId { get; private set; }
     public string ProductName { get; private set; }
+    public string? ImageUrl { get; private set; }
     public SizeEnum SizeName { get; private set; }
     public IceLevelEnum? IceLevel { get; private set; }
     public SugarLevelEnum? SugarLevel { get; private set; }
@@ -24,11 +25,12 @@ public class OrderItem : Entity<Guid>
 
     private OrderItem() { ProductName = null!;  UnitPrice = null!; TotalPrice = null!; }
 
-    internal OrderItem(Guid productId, string productName, SizeEnum sizeName, IceLevelEnum? iceLevel, SugarLevelEnum? sugarLevel, Money unitPrice, int quantity, string? notes)
+    internal OrderItem(Guid productId, string productName, string? imageUrl, SizeEnum sizeName, IceLevelEnum? iceLevel, SugarLevelEnum? sugarLevel, Money unitPrice, int quantity, string? notes)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
         ProductName = productName;
+        ImageUrl = imageUrl;
         SizeName = sizeName;
         IceLevel = iceLevel;
         SugarLevel = sugarLevel;

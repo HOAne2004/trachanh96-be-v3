@@ -114,6 +114,7 @@ namespace Orders.Application.Features.Commands
                     order.AddItem(
                         product.ProductId,
                         product.ProductName,
+                        product.ImageUrl,
                         product.Size, 
                         reqItem.IceLevel,
                         reqItem.SugarLevel,

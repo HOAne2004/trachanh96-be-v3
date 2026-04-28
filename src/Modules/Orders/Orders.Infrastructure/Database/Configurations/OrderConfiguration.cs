@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Orders.Infrastructure.Database.Configurations
 {
-    public class OrderConfiguration:IEntityTypeConfiguration<Order>
+    public class OrderConfiguration : IEntityTypeConfiguration<Order>
     {
         public void Configure(EntityTypeBuilder<Order> builder)
         {
@@ -12,23 +12,26 @@ namespace Orders.Infrastructure.Database.Configurations
             builder.HasKey(x => x.Id);
 
             // 1. Index quan trọng cho Production
-            builder.HasIndex(x => x.OrderCode).IsUnique(); // Trùng mã đơn là thảm họa
-
-            // Composite Index cho màn hình POS của nhân viên (Tìm theo cửa hàng + trạng thái + thời gian)
+            builder.HasIndex(x => x.OrderCode).IsUnique();
             builder.HasIndex(x => new { x.StoreId, x.OrderStatus, x.CreatedAt });
-
-            // Composite Index cho App khách hàng (Tìm lịch sử đơn của tôi)
             builder.HasIndex(x => new { x.CustomerId, x.CreatedAt });
 
             // 2. Map các thuộc tính cơ bản
             builder.Property(x => x.OrderCode).HasMaxLength(30).IsRequired();
             builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
 
-            // 3. Concurrency Token (Chống Race Condition)
-            builder.Property(x => x.RowVersion)
-                   .IsRequired();
+            // ==========================================
+            // [CẬP NHẬT] LƯU ENUM DƯỚI DẠNG STRING
+            // ==========================================
+            builder.Property(x => x.OrderStatus).HasConversion<string>().HasMaxLength(30);
+            builder.Property(x => x.OrderType).HasConversion<string>().HasMaxLength(30);
+            builder.Property(x => x.PaymentStatus).HasConversion<string>().HasMaxLength(30);
+            builder.Property(x => x.VoucherDiscountType).HasConversion<string>().HasMaxLength(30);
 
-            // 4. Map Value Object Money bằng ComplexProperty (Tính năng mới chuẩn DDD của EF Core)
+            // 3. Concurrency Token (Chống Race Condition)
+            builder.Property(x => x.RowVersion).IsRequired();
+
+            // 4. Map Value Object Money bằng ComplexProperty (Hoặc OwnsOne)
             builder.OwnsOne(x => x.SubTotal, p =>
             {
                 p.Property(m => m.Amount).HasColumnName("SubTotalAmount").HasPrecision(18, 2);
@@ -56,13 +59,11 @@ namespace Orders.Infrastructure.Database.Configurations
             });
 
             // 5. Cấu hình Relationship
-            // OrderItem
             builder.HasMany(x => x.Items)
                    .WithOne()
                    .HasForeignKey(x => x.OrderId)
-                   .OnDelete(DeleteBehavior.Cascade); // Xóa Order -> Xóa Items
+                   .OnDelete(DeleteBehavior.Cascade);
 
-            // StatusHistory (Không có class Configuration riêng vì nó quá nhỏ, cấu hình luôn ở đây)
             builder.HasMany(x => x.StatusHistories)
                    .WithOne()
                    .HasForeignKey("OrderId") // Shadow Foreign Key

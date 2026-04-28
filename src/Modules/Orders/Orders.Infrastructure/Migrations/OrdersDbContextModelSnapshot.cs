@@ -2,25 +2,23 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Orders.Infrastructure.Database;
 
 #nullable disable
 
-namespace Orders.Infrastructure.Database.Migrations
+namespace Orders.Infrastructure.Migrations
 {
     [DbContext(typeof(OrdersDbContext))]
-    [Migration("20260320102949_InitOrdersModule")]
-    partial class InitOrdersModule
+    partial class OrdersDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasDefaultSchema("orders")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -30,6 +28,18 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AppliedVoucherCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -42,34 +52,60 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CustomerNotes")
+                        .HasColumnType("text");
+
                     b.Property<string>("OrderCode")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderType")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
                         .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bytea");
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("TableId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VoucherDiscountType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal?>("VoucherDiscountValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("VoucherMaxDiscount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("VoucherMinOrderValue")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -80,7 +116,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                     b.HasIndex("StoreId", "OrderStatus", "CreatedAt");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders", "orders");
                 });
 
             modelBuilder.Entity("Orders.Domain.Entities.OrderItem", b =>
@@ -88,6 +124,13 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("IceLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -107,19 +150,20 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("SizeId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("SizeName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SugarLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems", "orders");
                 });
 
             modelBuilder.Entity("Orders.Domain.Entities.OrderStatusHistory", b =>
@@ -134,23 +178,57 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("ChangedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("FromStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Reason")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
-                    b.Property<int>("ToStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderStatusHistory");
+                    b.ToTable("OrderStatusHistories", "orders");
+                });
+
+            modelBuilder.Entity("Shared.Infrastructure.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedOnUtc", "OccurredOnUtc");
+
+                    b.ToTable("OutboxMessages", "orders");
                 });
 
             modelBuilder.Entity("Orders.Domain.Entities.Order", b =>
@@ -173,7 +251,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("Orders");
+                            b1.ToTable("Orders", "orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
@@ -197,7 +275,31 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("Orders");
+                            b1.ToTable("Orders", "orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
+                    b.OwnsOne("Shared.Domain.ValueObjects.Money", "ShippingFee", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("ShippingFeeAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("ShippingFeeCurrency");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("Orders", "orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
@@ -221,16 +323,64 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("Orders");
+                            b1.ToTable("Orders", "orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
                         });
 
+                    b.OwnsOne("Orders.Domain.ValueObjects.DeliveryInfo", "DeliveryDetails", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Address")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<double?>("DistanceKm")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<string>("PhoneNumber")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<DateTime?>("PickupTime")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("ProviderName")
+                                .HasColumnType("text");
+
+                            b1.Property<string>("RecipientName")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("TrackingId")
+                                .HasColumnType("text");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("Orders", "orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
+                    b.Navigation("DeliveryDetails");
+
                     b.Navigation("DiscountAmount")
                         .IsRequired();
 
                     b.Navigation("FinalTotal")
+                        .IsRequired();
+
+                    b.Navigation("ShippingFee")
                         .IsRequired();
 
                     b.Navigation("SubTotal")
@@ -263,7 +413,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderItemId");
 
-                            b1.ToTable("OrderItems");
+                            b1.ToTable("OrderItems", "orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderItemId");
@@ -287,7 +437,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderItemId");
 
-                            b1.ToTable("OrderItems");
+                            b1.ToTable("OrderItems", "orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderItemId");
@@ -306,7 +456,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                             b1.HasKey("OrderItemId", "__synthesizedOrdinal");
 
-                            b1.ToTable("OrderItems");
+                            b1.ToTable("OrderItems", "orders");
 
                             b1
                                 .ToJson("Toppings")
@@ -328,7 +478,7 @@ namespace Orders.Infrastructure.Database.Migrations
 
                                     b2.HasKey("OrderItemToppingOrderItemId", "OrderItemTopping__synthesizedOrdinal");
 
-                                    b2.ToTable("OrderItems");
+                                    b2.ToTable("OrderItems", "orders");
 
                                     b2.WithOwner()
                                         .HasForeignKey("OrderItemToppingOrderItemId", "OrderItemTopping__synthesizedOrdinal");

@@ -13,6 +13,7 @@ public class ProductSnapshotService : IProductSnapshotService
         var result = productSizes.Select(p => new ProductSnapshotDto(
             p.ProductId,
             "Trà Chanh Đào Tiên (Mock)",
+            "https://example.com/mock-image.png", // DỮ LIỆU GIẢ
             p.Size,
             p.Size == SizeEnum.M ? 25000 : 35000,
             "VND"
@@ -29,6 +30,7 @@ public class ProductSnapshotService : IProductSnapshotService
         var result = toppingIds.Select(id => new ToppingSnapshotDto(
             id,
             "Trân Châu Trắng (Mock)",
+            "https://example.com/mock-image.png", // DỮ LIỆU GIẢ
             10000,
             "VND"
         )).ToList();

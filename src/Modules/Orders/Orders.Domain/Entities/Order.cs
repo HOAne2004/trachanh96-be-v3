@@ -160,6 +160,7 @@ public class Order : AggregateRoot<Guid>, IAuditableEntity
     public void AddItem(
         Guid productId,
         string productName,
+        string? imageUrl,
         SizeEnum size,
         IceLevelEnum? ice,
         SugarLevelEnum? sugar,
@@ -193,7 +194,7 @@ public class Order : AggregateRoot<Guid>, IAuditableEntity
             if (_items.Count >= 50)
                 throw new InvalidOperationException("Tối đa 50 mặt hàng.");
 
-            var item = new OrderItem(productId, productName, size, ice, sugar, unitPrice, quantity, notes);
+            var item = new OrderItem(productId, productName, imageUrl, size, ice, sugar, unitPrice, quantity, notes);
 
             if (toppings != null)
                 foreach (var t in toppings) item.AddTopping(t);

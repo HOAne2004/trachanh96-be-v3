@@ -11,15 +11,21 @@ namespace Orders.Infrastructure.Database.Configurations
             builder.ToTable("OrderStatusHistories", "orders");
             builder.HasKey(x => x.Id);
 
-            // Cấu hình độ dài cột để DB không bị set mặc định là nvarchar(max) gây nặng máy
             builder.Property(x => x.Reason).HasMaxLength(500);
-
-            // Các thuộc tính bắt buộc (NOT NULL)
-            builder.Property(x => x.ToStatus).IsRequired();
             builder.Property(x => x.ChangedAt).IsRequired();
 
-            // Nếu muốn, bạn có thể cấu hình rõ cột FromStatus được phép Null
-            builder.Property(x => x.FromStatus).IsRequired(false);
+            // ==========================================
+            // [CẬP NHẬT] LƯU ENUM DƯỚI DẠNG STRING
+            // ==========================================
+            builder.Property(x => x.ToStatus)
+                   .HasConversion<string>()
+                   .HasMaxLength(30)
+                   .IsRequired();
+
+            builder.Property(x => x.FromStatus)
+                   .HasConversion<string>()
+                   .HasMaxLength(30)
+                   .IsRequired(false); // Được phép Null vì lúc tạo đơn mới (Draft) thì FromStatus = null
         }
     }
 }

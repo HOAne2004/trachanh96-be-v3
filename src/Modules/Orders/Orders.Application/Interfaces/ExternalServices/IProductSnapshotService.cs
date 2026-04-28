@@ -5,6 +5,7 @@ namespace Orders.Application.Interfaces.ExternalServices;
 public record ProductSnapshotDto(
     Guid ProductId,
     string ProductName,
+    string? ImageUrl,
     SizeEnum Size,
     decimal Price,
     string Currency);
@@ -12,6 +13,7 @@ public record ProductSnapshotDto(
 public record ToppingSnapshotDto(
     Guid ToppingId,
     string ToppingName,
+    string? ImageUrl,
     decimal Price,
     string Currency);
 public interface IProductSnapshotService

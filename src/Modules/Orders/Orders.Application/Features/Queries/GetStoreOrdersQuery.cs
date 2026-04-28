@@ -10,7 +10,8 @@ namespace Orders.Application.Features.Queries
 {
     public record StoreOrderToppingBrief(
         int Quantity,
-        string ToppingName
+        string ToppingName,
+        string? ImageUrl
     );
 
     public record StoreOrderItemBrief(
@@ -21,7 +22,7 @@ namespace Orders.Application.Features.Queries
         SugarLevelEnum? SugarLevel,  
         string? Notes,               
         List<StoreOrderToppingBrief> Toppings, 
-        string? ImageUrl = null      
+        string? ImageUrl      
     );
     public record StoreOrderSummaryResponse(
         Guid OrderId,
@@ -96,9 +97,10 @@ namespace Orders.Application.Features.Queries
                         i.Notes,
                         i.Toppings.Select(t => new StoreOrderToppingBrief(
                             t.Quantity,
-                            t.ToppingName
+                            t.ToppingName,
+                            t.ImageUrl
                         )).ToList(),
-                        null // Chỗ này truyền URL ảnh nếu trong Entity OrderItem của bạn có lưu
+                        i.ImageUrl 
                     )).ToList()
                 ))
                 .ToListAsync(cancellationToken);

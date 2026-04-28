@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Orders.Infrastructure.Database;
 
 #nullable disable
 
-namespace Orders.Infrastructure.Database.Migrations
+namespace Orders.Infrastructure.Migrations
 {
     [DbContext(typeof(OrdersDbContext))]
-    partial class OrdersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428092512_AddImageUrlOrderItem")]
+    partial class AddImageUrlOrderItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,11 +63,15 @@ namespace Orders.Infrastructure.Database.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
-                    b.Property<int>("OrderType")
-                        .HasColumnType("integer");
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
@@ -72,8 +79,10 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsRequired()
@@ -88,8 +97,9 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("VoucherDiscountType")
-                        .HasColumnType("integer");
+                    b.Property<string>("VoucherDiscountType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<decimal?>("VoucherDiscountValue")
                         .HasColumnType("numeric");
@@ -121,6 +131,9 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<string>("IceLevel")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -168,8 +181,9 @@ namespace Orders.Infrastructure.Database.Migrations
                     b.Property<Guid?>("ChangedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("FromStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
@@ -178,8 +192,10 @@ namespace Orders.Infrastructure.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("ToStatus")
-                        .HasColumnType("integer");
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 

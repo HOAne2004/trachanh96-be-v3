@@ -13,6 +13,7 @@ namespace Orders.Application.Features.Queries
     public record OrderToppingResponse(
         Guid ToppingId,
         string ToppingName,
+        string? ImageUrl,
         decimal Price,
         int Quantity
     );
@@ -20,6 +21,7 @@ namespace Orders.Application.Features.Queries
     public record OrderItemResponse(
         Guid ProductId,
         string ProductName,
+        string? ImageUrl,
         SizeEnum Size,
         IceLevelEnum? IceLevel,
         SugarLevelEnum? SugarLevel,
@@ -84,10 +86,10 @@ namespace Orders.Application.Features.Queries
                     o.FinalTotal.Amount,
                     o.Currency, o.CreatedAt,
                     o.Items.Select(i => new OrderItemResponse(
-                        i.ProductId, i.ProductName, i.SizeName, i.IceLevel, i.SugarLevel,
+                        i.ProductId, i.ProductName, i.ImageUrl, i.SizeName, i.IceLevel, i.SugarLevel,
                         i.UnitPrice.Amount, i.Quantity, i.TotalPrice.Amount, i.Notes,
                         i.Toppings.Select(t => new OrderToppingResponse(
-                            t.ToppingId, t.ToppingName, t.Price.Amount, t.Quantity
+                            t.ToppingId, t.ToppingName, t.ImageUrl, t.Price.Amount, t.Quantity
                         )).ToList()
                     )).ToList()
                 )).FirstOrDefaultAsync(cancellationToken);
