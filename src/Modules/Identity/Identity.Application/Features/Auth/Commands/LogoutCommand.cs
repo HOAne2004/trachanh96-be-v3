@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using MediatR;
-using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands;
@@ -9,7 +8,7 @@ namespace Identity.Application.Features.Auth.Commands;
 // 1. Command
 public record LogoutCommand(
     Guid UserPublicId
-) : ICommand<Result<bool>>; // Sử dụng ICommand từ Shared.Application.Interfaces
+) : IRequest<Result<bool>>;
 
 // 2. Validator
 public class LogoutCommandValidator : AbstractValidator<LogoutCommand>

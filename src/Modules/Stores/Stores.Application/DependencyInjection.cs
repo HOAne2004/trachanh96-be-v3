@@ -15,7 +15,6 @@ namespace Stores.Application
             services.AddMediatR(config =>
             {
                 config.RegisterServicesFromAssembly(assembly);
-                config.AddOpenBehavior(typeof(Shared.Application.Behaviors.ValidationBehavior<,>));
                 config.AddBehavior(typeof(IPipelineBehavior<,>), typeof(StoresTransactionBehavior<,>));
             });
             services.AddValidatorsFromAssembly(assembly);

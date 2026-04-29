@@ -252,7 +252,6 @@ public class User : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
         FailedLoginAttempts = 0; // Reset luôn số đếm để user đăng nhập lại từ đầu
     }
 
-    // Identity.Domain/Entities/User.cs - Thêm method này
     public void UpdateRefreshToken(string refreshToken, DateTime expiryTime)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
