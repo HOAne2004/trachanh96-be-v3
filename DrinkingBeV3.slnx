@@ -4,6 +4,12 @@
     <Project Path="src/API/BeverageSystem.Api/BeverageSystem.Api.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/AI/">
+    <Project Path="src/Modules/AI/AI.Application/AI.Application.csproj" />
+    <Project Path="src/Modules/AI/AI.Domain/AI.Domain.csproj" />
+    <Project Path="src/Modules/AI/AI.Infrastructure/AI.Infrastructure.csproj" />
+    <Project Path="src/Modules/AI/AI.Presentation/AI.Presentation.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Catalog/">
     <Project Path="src/Modules/Catalog/Catalog.Application/Catalog.Application.csproj" />
     <Project Path="src/Modules/Catalog/Catalog.Domain/Catalog.Domain.csproj" />

@@ -23,10 +23,11 @@
   </ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Modules\AI\AI.Infrastructure\AI.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Modules\AI\AI.Presentation\AI.Presentation.csproj" />
 		<ProjectReference Include="..\..\Modules\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
 		<ProjectReference Include="..\..\Modules\Catalog\Catalog.Presentation\Catalog.Presentation.csproj" />
 		<ProjectReference Include="..\..\Modules\Identity\Identity.Application\Identity.Application.csproj" />
-		<ProjectReference Include="..\..\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
 		<ProjectReference Include="..\..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
 		<ProjectReference Include="..\..\Modules\Identity\Identity.Presentation\Identity.Presentation.csproj" />
 		<ProjectReference Include="..\..\Modules\Orders\Orders.Infrastructure\Orders.Infrastructure.csproj" />

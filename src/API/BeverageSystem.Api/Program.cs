@@ -11,6 +11,8 @@ using Payments.Application;
 using System.Text.Json.Serialization;
 using Stores.Application;
 using Orders.Application;
+using AI.Infrastructure;
+using AI.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,7 @@ builder.Services.AddControllers()
     {
         // Dạy ASP.NET Core cách đọc/ghi Enum bằng chữ thay vì số trên toàn hệ thống
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    }); ;
+    }); 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerConfig(); // Gọi từ Extension
 builder.Services.AddJwtAuthentication(builder.Configuration); // Gọi từ Extension
@@ -31,20 +33,31 @@ builder.Services.AddProblemDetails();
 // Đăng ký Shared Infrastructure (Email, Interceptors...)
 builder.Services.AddSharedInfrastructure(builder.Configuration);
 builder.Services.AddSharedApplication();
+
 // 2. ĐĂNG KÝ CÁC MODULES
+// -- AI Module ---
+builder.Services.AddAIApplication();
+builder.Services.AddAIInfrastructure(builder.Configuration);
+
+// --- Identity Module (User, Role, Auth) ---
 builder.Services.AddIdentityModule(builder.Configuration);
 
+// --- Catalog Module ---
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCatalogApplication();
 
+//---Stores Module ---
 builder.Services.AddStoreInfrastructure(builder.Configuration);
 builder.Services.AddStoresApplication();
 
+// ---Orders Module ---
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddOrdersApplication();
 
+// --- Payments Module ---
 builder.Services.AddPaymentsInfrastructure(builder.Configuration);
 builder.Services.AddPaymentsApplication();
+
 // ==========================================================
 
 builder.Services.AddCors(options =>
@@ -78,5 +91,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+try
+{
+    // Gọi hàm Seed Data thẳng từ app.Services
+    await app.Services.SeedCatalogDataAsync();
+
+    // Sau này có module khác thì chỉ việc gọi tiếp:
+    // await app.Services.SeedIdentityDataAsync();
+    // await app.Services.SeedCartDataAsync();
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Lỗi Seed Data toàn hệ thống.");
+}
 
 app.Run();
