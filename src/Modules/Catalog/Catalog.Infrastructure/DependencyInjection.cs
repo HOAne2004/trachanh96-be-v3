@@ -1,4 +1,5 @@
 ﻿using Catalog.Application.Interfaces;
+using Catalog.Infrastructure.Data;
 using Catalog.Infrastructure.Database;
 using Catalog.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,5 +29,15 @@ public static class DependencyInjection
         services.AddScoped<IToppingRepository, ToppingRepository>();
         services.AddScoped<ICatalogUnitOfWork, CatalogUnitOfWork>();
         return services;
+    }
+
+    public static async Task SeedCatalogDataAsync(this IServiceProvider serviceProvider)
+    {
+        // Tạo một scope mới để lấy DbContext (vì DbContext là Scoped Service)
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+
+        // Gọi Seeder
+        await DataSeeder.SeedAsync(context);
     }
 }

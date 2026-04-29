@@ -27,7 +27,8 @@ public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
     public Topping(string name, Money basePrice, string? imageUrl = null)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Tên Topping không được trống");
+            // Chỉ cần thêm nameof(name) vào đây để log ghi rõ tham số nào bị lỗi
+            throw new ArgumentException("Tên Topping không được trống.", nameof(name));
 
         Name = name.Trim();
         Slug = Slug.Create(Name);
