@@ -72,8 +72,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-app.UseCors("AllowViteApp");
+
 app.UseExceptionHandler();
+
+app.UseCors("AllowViteApp");
 
 if (app.Environment.IsDevelopment())
 {

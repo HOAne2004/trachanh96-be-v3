@@ -2,18 +2,21 @@
 
 namespace AI.Application.Interfaces
 {
-    /// <summary>
-    /// Contract giao tiếp với các dịch vụ AI (Gemini, OpenAI, v.v.)
-    /// </summary>
     public interface IAIService
     {
         /// <summary>
-        /// Gửi tin nhắn của người dùng tới AI và nhận về phản hồi hoặc yêu cầu gọi hàm.
+        /// Gửi lịch sử đàm thoại và ngữ cảnh hệ thống (Menu/System Context) lên Gemini API.
+        /// Trả về phản hồi của AI kèm theo thông số Token tiêu thụ, Payload cho Generative UI và trạng thái an toàn.
         /// </summary>
-        /// <param name="sessionId">ID của phiên chat để AI nhớ ngữ cảnh cuộc trò chuyện.</param>
-        /// <param name="userMessage">Tin nhắn của khách hàng (VD: "Cho mình 1 trà đào").</param>
-        /// <param name="systemContext">Ngữ cảnh hệ thống bơm vào (VD: Menu hiện tại, thông tin quán).</param>
-        /// <returns>Kết quả trả về từ AI bao gồm text hoặc lệnh gọi hàm.</returns>
-        Task<AIConversationResult> SendMessageAsync(string sessionId, List<MessageDto> history, string systemContext);
+        /// <param name="sessionId">ID của phiên chat (dùng làm tracking/log)</param>
+        /// <param name="history">Lịch sử tin nhắn giữa User và Model</param>
+        /// <param name="systemContext">Ngữ cảnh hệ thống (dữ liệu Menu/Quán dưới dạng JSON)</param>
+        /// <param name="cancellationToken">Token quản lý việc hủy request</param>
+        /// <returns>Đối tượng AIConversationResult đóng gói toàn bộ kết quả và chỉ số hệ thống</returns>
+        Task<AIConversationResult> SendMessageAsync(
+            string sessionId,
+            List<MessageDto> history,
+            string systemContext,
+            CancellationToken cancellationToken = default);
     }
 }

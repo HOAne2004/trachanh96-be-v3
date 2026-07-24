@@ -23,7 +23,7 @@ namespace AI.Infrastructure.Services
             _apiKey = configuration["AI:GeminiApiKey"] ?? throw new ArgumentNullException("Thiếu AI:GeminiApiKey");
         }
 
-        public async Task<AIConversationResult> SendMessageAsync(string sessionId, List<MessageDto> history, string systemContext)
+        public async Task<AIConversationResult> SendMessageAsync(string sessionId, List<ChatSessionDto> history, string systemContext)
         {
             // Chuyển đổi lịch sử chat của bạn thành mảng JSON cho Google
             var formattedContents = history.Select(msg => new
