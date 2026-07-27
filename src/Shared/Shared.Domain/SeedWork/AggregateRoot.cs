@@ -9,7 +9,7 @@
 
 namespace Shared.Domain.SeedWork
 {
-    public abstract class AggregateRoot<TId> : Entity<TId>
+    public abstract class AggregateRoot<TId> : AuditableEntity<TId>
     {
 
     }
