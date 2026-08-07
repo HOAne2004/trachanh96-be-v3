@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Application.Interfaces;
+using Shared.Infrastructure.Authorization;
 using Shared.Infrastructure.Interceptors;
 using Shared.Infrastructure.Outbox;
+using Shared.Infrastructure.Services;
 using Shared.Infrastructure.Storage;
 using System.Net.Mail;
 
@@ -12,6 +15,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddMemoryCache();
+        services.AddScoped<ISecurityCacheService, SecurityCacheService>();
+
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<InsertOutboxMessagesInterceptor>();
         // CẤU HÌNH FLUENT EMAIL
@@ -48,6 +54,11 @@ public static class DependencyInjection
         // 3. Đăng ký IStorageService (Nối Interface với Class thực thi)
         services.AddScoped<IStorageService, SupabaseStorageService>();
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, CurrentUser>();
+
+        services.AddScoped<IBusinessAuthorizationService, BusinessAuthorizationService>();
+        services.AddScoped<IAuthorizationHandler, StoreBoundAuthorizationHandler>();
         return services;
     }
 }
