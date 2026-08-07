@@ -11,7 +11,7 @@ using Shared.Domain.Interfaces;
 
 namespace Shared.Domain.SeedWork;
 
-public abstract class Entity<TId> : IEquatable<Entity<TId>>
+public abstract class Entity<TId> : IEquatable<Entity<TId>>, IHasDomainEvents
 {
     public TId Id { get; protected set; } = default!;
 

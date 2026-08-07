@@ -8,11 +8,12 @@
 /// - Xóa sạch Event trên Entity sau khi đã "nhét" xong để tránh xử lý trùng.
 /// 
 /// Sử dụng: Đây là nửa đầu của Outbox Pattern. Đảm bảo mọi sự kiện nghiệp vụ đều được ghi nhận lại 100% không sợ mất điện giữa chừng.
+/// Lưu ý: dùng IHasDomainEvents (không phải Entity&lt;Guid&gt;) để quét được mọi Entity bất kể kiểu TId (Guid, string...).
 /// </summary>
 
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
-using Shared.Domain.SeedWork;
+using Shared.Domain.Interfaces;
 
 namespace Shared.Infrastructure.Outbox;
 
@@ -27,7 +28,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         if (dbContext is null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var entities = dbContext.ChangeTracker
-            .Entries<Entity<Guid>>()
+            .Entries<IHasDomainEvents>()
             .Where(e => e.Entity.DomainEvents.Any())
             .Select(e => e.Entity)
             .ToList();
@@ -37,7 +38,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
 
         var outboxMessages = domainEvents.Select(domainEvent => new OutboxMessage
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             OccurredOnUtc = DateTime.UtcNow,
             Type = domainEvent.GetType().Name,
             Content = JsonConvert.SerializeObject(
