@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Identity.Application.DTOs.Request;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
@@ -9,80 +10,76 @@ using System.Text;
 namespace Identity.Application.Features.Users.Queries
 {
     // ==========================================================
-    // 1. DTO CHUYÊN DỤNG CHO ADMIN (Chứa nhiều thông tin hơn Khách)
-    // ==========================================================
-    public record UserAdminDto(
-        Guid PublicId,
-        string Email,
-        string FullName,
-        string? Phone,
-        string Role,
-        string Status,
-        DateTime CreatedAt
-    );
-
-    // ==========================================================
-    // 2. THE QUERY (Chứa các tham số Phân trang & Lọc)
+    // 1. THE QUERY
     // ==========================================================
     public record GetPaginatedUsersQuery(
         int PageIndex = 1,
         int PageSize = 10,
-        string? SearchTerm = null, // Tìm theo tên hoặc email
-        string? Role = null,       // Lọc theo Customer/Staff/Manager/Admin
-        string? Status = null      // Lọc theo Active/Locked
+        string? SearchTerm = null,
+        Guid? RoleId = null, // Filter theo ID của Role cho chuẩn xác
+        string? Status = null
     ) : IRequest<Result<PagedResult<UserAdminDto>>>;
 
     // ==========================================================
-    // 3. THE VALIDATOR (Bảo vệ Database khỏi các query vô lý)
+    // 2. THE VALIDATOR
     // ==========================================================
     public class GetPaginatedUsersQueryValidator : AbstractValidator<GetPaginatedUsersQuery>
     {
         public GetPaginatedUsersQueryValidator()
         {
-            RuleFor(x => x.PageIndex)
-                .GreaterThan(0).WithMessage("Trang hiện tại phải lớn hơn 0.");
-
+            RuleFor(x => x.PageIndex).GreaterThan(0).WithMessage("Trang hiện tại phải lớn hơn 0.");
             RuleFor(x => x.PageSize)
-                .GreaterThan(0).WithMessage("Số lượng bản ghi trên một trang phải lớn hơn 0.")
-                .LessThanOrEqualTo(100).WithMessage("Không được lấy quá 100 bản ghi mỗi lần để tránh sập Server.");
+                .GreaterThan(0)
+                .LessThanOrEqualTo(100).WithMessage("Không được lấy quá 100 bản ghi mỗi lần.");
         }
     }
 
     // ==========================================================
-    // 4. THE HANDLER
+    // 3. THE HANDLER
     // ==========================================================
     public class GetPaginatedUsersQueryHandler : IRequestHandler<GetPaginatedUsersQuery, Result<PagedResult<UserAdminDto>>>
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
 
-        public GetPaginatedUsersQueryHandler(IUserRepository userRepository)
+        public GetPaginatedUsersQueryHandler(
+            IUserRepository userRepository,
+            IRoleRepository roleRepository)
         {
             _userRepository = userRepository;
+            _roleRepository = roleRepository;
         }
 
         public async Task<Result<PagedResult<UserAdminDto>>> Handle(GetPaginatedUsersQuery request, CancellationToken cancellationToken)
         {
-            // Gọi xuống Repository để lấy dữ liệu ĐÃ ĐƯỢC PHÂN TRANG TỪ DATABASE
+            // 1. Lấy dữ liệu phân trang từ DB (Repository đã dùng AsNoTracking và Include UserRoles)
             var (users, totalCount) = await _userRepository.GetPaginatedAsync(
                 request.PageIndex,
                 request.PageSize,
                 request.SearchTerm,
-                request.Role,
+                request.RoleId,
                 request.Status,
                 cancellationToken);
 
-            // Map sang DTO
+            // 2. TỐI ƯU HÓA CQRS: Lấy toàn bộ tên Role trong 1 Query duy nhất để tránh N+1 Problem
+            var allRoleIds = users.SelectMany(u => u.UserRoles).Select(ur => ur.RoleId).Distinct().ToList();
+            var roles = await _roleRepository.GetRolesByIdsAsync(allRoleIds, cancellationToken);
+            var roleDictionary = roles.ToDictionary(r => r.Id, r => r.Name);
+
+            // 3. Map sang DTO
             var dtos = users.Select(u => new UserAdminDto(
-                PublicId: u.PublicId,
-                Email: u.Email.Value, // Nhớ gọi .Value vì đây là ValueObject
+                Id: u.Id,
+                Email: u.Email.Value,
                 FullName: u.FullName,
                 Phone: u.Phone?.Value,
-                Role: u.Role.ToString(),
+                Roles: u.UserRoles
+                        .Where(ur => roleDictionary.ContainsKey(ur.RoleId))
+                        .Select(ur => roleDictionary[ur.RoleId])
+                        .ToList(),
                 Status: u.Status.ToString(),
                 CreatedAt: u.CreatedAt
             )).ToList();
 
-            // Đóng gói vào PagedResult (Cái class xịn sò bạn đã viết ở tầng Shared)
             var pagedResult = new PagedResult<UserAdminDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
             return Result<PagedResult<UserAdminDto>>.Success(pagedResult);

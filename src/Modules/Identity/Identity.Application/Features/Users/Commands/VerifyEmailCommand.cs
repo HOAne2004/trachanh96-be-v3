@@ -3,53 +3,75 @@ using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.Exceptions;
 
-namespace Identity.Application.Features.Users.Commands
+namespace Identity.Application.Features.Users.Commands;
+
+// ==========================================================
+// 1. THE COMMAND (Self-Service: Bỏ UserPublicId)
+// ==========================================================
+public record VerifyEmailCommand(string OtpToken) : IRequest<Result<string>>;
+
+// ==========================================================
+// 2. THE VALIDATOR
+// ==========================================================
+public class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailCommand>
 {
-    public record VerifyEmailCommand(Guid UserPublicId, string OtpToken) : ICommand<Result<string>>;
-
-    public class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailCommand>
+    public VerifyEmailCommandValidator()
     {
-        public VerifyEmailCommandValidator()
-        {
-            RuleFor(x => x.UserPublicId).NotEmpty();
-            RuleFor(x => x.OtpToken).NotEmpty().WithMessage("Mã xác thực không được để trống.");
-        }
+        RuleFor(x => x.OtpToken).NotEmpty().WithMessage("Mã xác thực không được để trống.");
+    }
+}
+
+// ==========================================================
+// 3. THE HANDLER
+// ==========================================================
+public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Result<string>>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IIdentityUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
+
+    public VerifyEmailCommandHandler(
+        IUserRepository userRepository,
+        IIdentityUnitOfWork unitOfWork,
+        ICurrentUser currentUser)
+    {
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
     }
 
-    public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Result<string>>
+    public async Task<Result<string>> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
     {
-        private readonly IUserRepository _userRepository;
-
-        public VerifyEmailCommandHandler(IUserRepository userRepository)
+        // 1. Chặn request nếu chưa có Token đăng nhập
+        if (!_currentUser.IsAuthenticated)
         {
-            _userRepository = userRepository;
+            return Result<string>.Failure("Bạn chưa đăng nhập.");
         }
 
-        public async Task<Result<string>> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
+        // 2. Lấy User an toàn từ JWT Context
+        var user = await _userRepository.GetByIdAsync(_currentUser.UserId, cancellationToken);
+        if (user == null || user.IsDeleted)
         {
-            var user = await _userRepository.GetByPublicIdAsync(request.UserPublicId, cancellationToken);
-            if (user == null)
-                return Result<string>.Failure("Không tìm thấy tài khoản người dùng.");
+            return Result<string>.Failure("Không tìm thấy tài khoản người dùng.");
+        }
 
-            try
-            {
-                // Gọi logic từ Domain: Kiểm tra OTP và chuyển EmailVerified = true
-                user.VerifyEmail(request.OtpToken);
+        try
+        {
+            // 3. Ủy quyền cho Domain Behavior kiểm tra OTP
+            user.VerifyEmail(request.OtpToken);
 
-                await _userRepository.UpdateAsync(user, cancellationToken);
+            // 4. Cập nhật và lưu vào DB
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                return Result<string>.Success("Xác thực email thành công!");
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Bắt các lỗi throw từ Domain (VD: Mã sai, mã hết hạn)
-                return Result<string>.Failure(ex.Message);
-            }
-            catch (Exception)
-            {
-                return Result<string>.Failure("Có lỗi xảy ra trong quá trình xác thực.");
-            }
+            return Result<string>.Success("Xác thực email thành công!");
+        }
+        catch (DomainException ex)
+        {
+            // Bắt chính xác lỗi nghiệp vụ từ Domain (Mã sai, hết hạn...)
+            return Result<string>.Failure(ex.Message);
         }
     }
 }

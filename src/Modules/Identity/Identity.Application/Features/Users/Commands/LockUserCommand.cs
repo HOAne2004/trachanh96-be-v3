@@ -3,66 +3,65 @@ using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.Exceptions;
 
-namespace Identity.Application.Features.Users.Commands
+namespace Identity.Application.Features.Users.Commands { 
+
+// ==========================================================
+// COMMAND KHÓA TÀI KHOẢN
+// ==========================================================
+public record LockUserCommand(Guid TargetUserId, int LockoutDays) : IRequest<Result<string>>;
+
+public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
 {
-    // --- COMMAND KHÓA TÀI KHOẢN ---
-    // Trừ phi khóa vĩnh viễn, còn không thì ta truyền vào số ngày khóa (LockoutDays)
-    public record LockUserCommand(Guid TargetUserPublicId, int LockoutDays) : ICommand<Result<string>>;
-
-    public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
+    public LockUserCommandValidator()
     {
-        public LockUserCommandValidator()
-        {
-            RuleFor(x => x.TargetUserPublicId).NotEmpty();
-            RuleFor(x => x.LockoutDays).GreaterThan(0).WithMessage("Số ngày khóa phải lớn hơn 0.");
-        }
+        RuleFor(x => x.TargetUserId).NotEmpty();
+        RuleFor(x => x.LockoutDays).GreaterThan(0).WithMessage("Số ngày khóa phải lớn hơn 0.");
+    }
+}
+
+public class LockUserCommandHandler : IRequestHandler<LockUserCommand, Result<string>>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IIdentityUnitOfWork _unitOfWork;
+    private readonly ISecurityCacheService _securityCacheService;
+
+    public LockUserCommandHandler(
+        IUserRepository userRepository,
+        IIdentityUnitOfWork unitOfWork,
+        ISecurityCacheService securityCacheService)
+    {
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _securityCacheService = securityCacheService;
     }
 
-    public class LockUserCommandHandler : IRequestHandler<LockUserCommand, Result<string>>
+    public async Task<Result<string>> Handle(LockUserCommand request, CancellationToken cancellationToken)
     {
-        private readonly IUserRepository _userRepository;
+        var user = await _userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
+        if (user == null) return Result<string>.Failure("Không tìm thấy người dùng.");
 
-        public LockUserCommandHandler(IUserRepository userRepository) => _userRepository = userRepository;
-
-        public async Task<Result<string>> Handle(LockUserCommand request, CancellationToken cancellationToken)
+        try
         {
-            var user = await _userRepository.GetByPublicIdAsync(request.TargetUserPublicId, cancellationToken);
-            if (user == null) return Result<string>.Failure("Không tìm thấy người dùng.");
+            var lockoutEndTime = DateTime.UtcNow.AddDays(request.LockoutDays);
 
-            try
-            {
-                var lockoutEndTime = DateTime.UtcNow.AddDays(request.LockoutDays);
-                user.LockAccount(lockoutEndTime);
-                await _userRepository.UpdateAsync(user, cancellationToken);
-                return Result<string>.Success($"Đã khóa tài khoản đến ngày {lockoutEndTime:dd/MM/yyyy}.");
-            }
-            catch (Exception ex) { return Result<string>.Failure(ex.Message); }
+            // 1. Gọi Domain: LockAccount bên trong đã tự gọi RevokeAllSessions()
+            user.LockAccount(lockoutEndTime);
+
+            // 2. Bắt buộc thay đổi Security Stamp để kill JWT
+            user.UpdateSecurityStamp();
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // 3. Cập nhật Redis/Cache ngay lập tức
+            await _securityCacheService.SetSecurityStampAsync(user.Id, user.SecurityStamp.ToString(), TimeSpan.FromMinutes(15));
+
+            return Result<string>.Success($"Đã khóa tài khoản đến ngày {lockoutEndTime:dd/MM/yyyy HH:mm}.");
         }
+        catch (DomainException ex) { return Result<string>.Failure(ex.Message); }
     }
+}
 
-
-    // --- COMMAND MỞ KHÓA TÀI KHOẢN ---
-    public record UnlockUserCommand(Guid TargetUserPublicId) : IRequest<Result<string>>;
-
-    public class UnlockUserCommandHandler : IRequestHandler<UnlockUserCommand, Result<string>>
-    {
-        private readonly IUserRepository _userRepository;
-
-        public UnlockUserCommandHandler(IUserRepository userRepository) => _userRepository = userRepository;
-
-        public async Task<Result<string>> Handle(UnlockUserCommand request, CancellationToken cancellationToken)
-        {
-            var user = await _userRepository.GetByPublicIdAsync(request.TargetUserPublicId, cancellationToken);
-            if (user == null) return Result<string>.Failure("Không tìm thấy người dùng.");
-
-            try
-            {
-                user.UnlockAccount();
-                await _userRepository.UpdateAsync(user, cancellationToken);
-                return Result<string>.Success("Đã mở khóa tài khoản thành công.");
-            }
-            catch (Exception ex) { return Result<string>.Failure(ex.Message); }
-        }
-    }
 }

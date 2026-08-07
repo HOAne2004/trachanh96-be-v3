@@ -3,73 +3,92 @@ using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Interfaces;
 using Shared.Application.Models;
+using Shared.Domain.Exceptions;
 
-namespace Identity.Application.Features.Users.Commands
+namespace Identity.Application.Features.Users.Commands;
+
+// ==========================================================
+// 1. THE COMMAND (Data Transfer Object)
+// KHÔNG CHỨA USER ID! Chỉ chứa những gì được phép sửa.
+// ==========================================================
+public record UpdateProfileCommand(
+    string FullName,
+    string? PhoneNumber,
+    string? ThumbnailUrl
+) : IRequest<Result<string>>;
+
+// ==========================================================
+// 2. THE VALIDATOR
+// ==========================================================
+public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
 {
-    // ==========================================================
-    // 1. THE COMMAND
-    // ==========================================================
-    public record UpdateProfileCommand(
-        Guid UserPublicId, // Lấy từ Token để đảm bảo chỉ sửa profile của chính mình
-        string FullName,
-        string? PhoneNumber,
-        string? ThumbnailUrl
-    ) : ICommand<Result<string>>;
-
-    // ==========================================================
-    // 2. THE VALIDATOR
-    // ==========================================================
-    public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
+    public UpdateProfileCommandValidator()
     {
-        public UpdateProfileCommandValidator()
-        {
-            RuleFor(x => x.UserPublicId).NotEmpty();
+        RuleFor(x => x.FullName)
+            .NotEmpty().WithMessage("Họ tên không được để trống.")
+            .MaximumLength(150).WithMessage("Họ tên không được vượt quá 150 ký tự.");
 
-            RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("Họ tên không được để trống.")
-                .MaximumLength(150).WithMessage("Họ tên không được vượt quá 150 ký tự.");
+        // Chỉ validate format nếu người dùng có nhập số điện thoại
+        RuleFor(x => x.PhoneNumber)
+            .Matches(@"^(0[3|5|7|8|9])+([0-9]{8})$").WithMessage("Số điện thoại không đúng định dạng VN.")
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+    }
+}
 
-            // Chỉ validate format nếu người dùng có nhập số điện thoại
-            RuleFor(x => x.PhoneNumber)
-                .Matches(@"^(0[3|5|7|8|9])+([0-9]{8})$").WithMessage("Số điện thoại không đúng định dạng VN.")
-                .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
-        }
+// ==========================================================
+// 3. THE HANDLER
+// ==========================================================
+public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Result<string>>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly ICurrentUser _currentUser;
+    private readonly IIdentityUnitOfWork _unitOfWork;
+
+    public UpdateProfileCommandHandler(
+        IUserRepository userRepository,
+        ICurrentUser currentUser,
+        IIdentityUnitOfWork unitOfWork)
+    {
+        _userRepository = userRepository;
+        _currentUser = currentUser;
+        _unitOfWork = unitOfWork;
     }
 
-    // ==========================================================
-    // 3. THE HANDLER
-    // ==========================================================
-    public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Result<string>>
+    public async Task<Result<string>> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
-        private readonly IUserRepository _userRepository;
-
-        public UpdateProfileCommandHandler(IUserRepository userRepository)
+        // 1. Cổng gác bảo mật (Đảm bảo Request đến từ một Token hợp lệ)
+        if (!_currentUser.IsAuthenticated)
         {
-            _userRepository = userRepository;
+            return Result<string>.Failure("Bạn chưa đăng nhập.");
         }
 
-        public async Task<Result<string>> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
+        // 2. Lấy User từ ID đáng tin cậy (Móc từ JWT, cấm truyền từ ngoài vào)
+        var user = await _userRepository.GetByIdAsync(_currentUser.UserId, cancellationToken);
+
+        if (user == null || user.IsDeleted)
         {
-            var user = await _userRepository.GetByPublicIdAsync(request.UserPublicId, cancellationToken);
-            if (user == null)
-            {
-                return Result<string>.Failure("Không tìm thấy tài khoản người dùng.");
-            }
-
-            try
-            {
-                // Ủy quyền cho Domain xử lý
-                user.UpdateProfile(request.FullName, request.PhoneNumber, request.ThumbnailUrl);
-
-                await _userRepository.UpdateAsync(user, cancellationToken);
-
-                // TransactionBehavior sẽ tự động lo việc SaveChanges
-                return Result<string>.Success("Cập nhật thông tin cá nhân thành công.");
-            }
-            catch (Exception ex)
-            {
-                return Result<string>.Failure(ex.Message);
-            }
+            return Result<string>.Failure("Không tìm thấy tài khoản người dùng hoặc tài khoản đã bị khóa.");
         }
+
+        try
+        {
+            // 3. Ủy quyền cho Domain Behavior xử lý (Rich Domain Model)
+            user.UpdateProfile(request.FullName, request.PhoneNumber, request.ThumbnailUrl);
+
+            // 4. Lưu trữ (Persistence)
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            // Commit Transaction tường minh
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result<string>.Success("Cập nhật thông tin cá nhân thành công.");
+        }
+        catch (DomainException ex)
+        {
+            // CHỈ bắt lỗi nghiệp vụ (ví dụ: Tên quá dài, Số điện thoại sai định dạng...)
+            return Result<string>.Failure(ex.Message);
+        }
+        // Các Exception liên quan đến DB (như timeout) sẽ văng xuyên qua đây,
+        // lên GlobalExceptionHandler để trả 500 Internal Server Error.
     }
 }
