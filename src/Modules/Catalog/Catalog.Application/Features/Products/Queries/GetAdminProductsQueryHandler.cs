@@ -55,7 +55,7 @@ public class GetAdminProductsQueryHandler : IRequestHandler<GetAdminProductsQuer
 
         // Map sang DTO riêng của Admin
         var dtos = items.Select(p => new AdminProductSummaryDto(
-            Id: p.PublicId,
+            Id: p.Id,
             Name: p.Name,
             ImageUrl: p.ImageUrl,
             ProductType: p.ProductType.ToString(),

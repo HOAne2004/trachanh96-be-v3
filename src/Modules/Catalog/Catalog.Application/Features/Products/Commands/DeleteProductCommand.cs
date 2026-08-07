@@ -26,6 +26,6 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
 
         // 2. Gọi Domain Behavior để thực hiện logic Xóa mềm
         product.Delete();
-        return Result<Guid>.Success(product.PublicId);
+        return Result<Guid>.Success(product.Id);
     }
 }

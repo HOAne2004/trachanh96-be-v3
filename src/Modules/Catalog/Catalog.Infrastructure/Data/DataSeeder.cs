@@ -71,7 +71,7 @@ namespace Catalog.Infrastructure.Data
                 if (!await context.Products.AnyAsync(p => p.Name == "Trà Chanh Truyền Thống"))
                 {
                     var traChanh = new Product(
-                        Guid.NewGuid(),
+                        Guid.CreateVersion7(),
                         traChanhCat.Id, // Sử dụng Id vừa lấy từ DB cho chính xác
                         "Trà Chanh Truyền Thống",
                         ProductTypeEnum.Drink,
@@ -96,7 +96,7 @@ namespace Catalog.Infrastructure.Data
             if (traChanhCat != null && !await context.Products.AnyAsync(p => p.Name == "Trà Chanh Sả Nha Đam"))
             {
                 var traChanhSa = new Product(
-                    Guid.NewGuid(),
+                    Guid.CreateVersion7(),
                     traChanhCat.Id,
                     "Trà Chanh Sả Nha Đam",
                     ProductTypeEnum.Drink,

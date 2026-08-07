@@ -166,7 +166,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
             _productRepository.Add(product);
 
-            return Result<Guid>.Success(product.PublicId);
+            return Result<Guid>.Success(product.Id);
         }
         catch (ArgumentException ex)
         {

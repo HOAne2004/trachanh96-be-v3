@@ -65,7 +65,7 @@ public class GetCatalogProductsQueryHandler : IRequestHandler<GetCatalogProducts
                 : null;
 
             return new CustomerProductCardDto(
-                Id: p.PublicId,
+                Id: p.Id,
                 CategoryId: p.CategoryId,
                 Name: p.Name,
                 Slug: p.Slug.Value,

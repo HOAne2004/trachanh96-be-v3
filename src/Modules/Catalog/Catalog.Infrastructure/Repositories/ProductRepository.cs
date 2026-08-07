@@ -16,7 +16,7 @@ public class ProductRepository : IProductRepository
         _context = context;
     } 
 
-    public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Products
             .Include(p => p.StoreProducts)
@@ -33,7 +33,7 @@ public class ProductRepository : IProductRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, int? categoryId, int? excludeId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByNameAsync(string name, int? categoryId, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Products
             .Where(p => p.Name == name && !p.IsDeleted);
@@ -51,14 +51,14 @@ public class ProductRepository : IProductRepository
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<Product?> GetByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByPublicIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Products
              .Include(p => p.StoreProducts)
             .Include(p => p.ProductSizes)
             .Include(p => p.ProductToppings)
             .ThenInclude(pt => pt.Topping)
-            .FirstOrDefaultAsync(p => p.PublicId == publicId && !p.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
 
     public async Task<Product?> GetBySlugAsync(Slug slug, CancellationToken cancellationToken = default)

@@ -4,7 +4,7 @@ namespace Catalog.Domain.Entities;
 
 public class ProductTopping
 {
-    public int ProductId { get; private set; }
+    public Guid ProductId { get; private set; }
     public int ToppingId { get; private set; }
     public Money PriceOverride { get; private set; }
     public int MaxQuantity { get; private set; }
@@ -19,7 +19,7 @@ public class ProductTopping
         PriceOverride = null!;
     }
 
-    internal ProductTopping(int productId, int toppingId, Money priceOverride, int maxQuantity)
+    internal ProductTopping(Guid productId, int toppingId, Money priceOverride, int maxQuantity)
     {
         if (maxQuantity < 1)
             throw new ArgumentException("Số lượng Topping tối đa phải lớn hơn 0.");

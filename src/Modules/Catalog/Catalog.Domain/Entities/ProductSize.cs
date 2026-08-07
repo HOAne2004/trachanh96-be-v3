@@ -5,7 +5,7 @@ namespace Catalog.Domain.Entities;
 
 public class ProductSize
 {
-    public int ProductId { get; private set; }
+    public Guid ProductId { get; private set; }
     public SizeEnum Size { get; private set; }
 
     // Đổi tên thành PriceModifier để tránh nhầm lẫn với Override giá gốc
@@ -16,7 +16,7 @@ public class ProductSize
         PriceModifier = null!;
     }
 
-    internal ProductSize(int productId, SizeEnum size, Money priceModifier)
+    internal ProductSize(Guid productId, SizeEnum size, Money priceModifier)
     {
         ProductId = productId;
         Size = size;

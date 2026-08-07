@@ -13,7 +13,7 @@ public record UpdateProductSizeDto(SizeEnum Size, decimal PriceOverrideAmount, s
 public record UpdateProductToppingDto(int ToppingId, decimal PriceOverrideAmount, int MaxQuantity = 1, string Currency = "VND");
 
 public record UpdateProductCommand(
-    Guid Id, 
+    Guid Id,
     int CategoryId,
     string Name,
     string? Description,
@@ -53,7 +53,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
     {
         public UpdateProductToppingDtoValidator()
         {
-            RuleFor(x => x.ToppingId).GreaterThan(0).WithMessage("ID Topping không hợp lệ.");
             RuleFor(x => x.PriceOverrideAmount).GreaterThanOrEqualTo(0).WithMessage("Giá override phải lớn hơn hoặc bằng 0.");
             RuleFor(x => x.MaxQuantity).GreaterThan(0).WithMessage("Số lượng tối đa phải lớn hơn 0.");
         }
@@ -165,7 +164,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
             {
                 product.Deactivate(); // Tạm ẩn / Tạm hết hàng
             }
-            return Result<Guid>.Success(product.PublicId);
+            return Result<Guid>.Success(product.Id);
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
         {

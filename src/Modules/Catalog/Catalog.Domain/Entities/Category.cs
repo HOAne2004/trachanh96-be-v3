@@ -14,11 +14,6 @@ public class Category : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEnti
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; } 
 
-    // Audit & Soft Delete (Bảo vệ encapsulation)
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
 
     protected Category() {
         Name = null!;

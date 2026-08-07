@@ -7,10 +7,10 @@ namespace Catalog.Application.Interfaces
     public interface IProductRepository
     {
 
-        Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<List<Product>> GetByCategoryIdAsync(int categoryId, CancellationToken cancellationToken = default);
-        Task<bool> ExistsByNameAsync(string name, int? categoryId, int? excludeId = null, CancellationToken cancellationToken = default);
-        Task<Product?> GetByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default);
+        Task<bool> ExistsByNameAsync(string name, int? categoryId, Guid? excludeId = null, CancellationToken cancellationToken = default);
+        Task<Product?> GetByPublicIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Product?> GetBySlugAsync(Slug slug, CancellationToken cancellationToken = default);
         void Add(Product product);
 

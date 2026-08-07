@@ -1,21 +1,15 @@
-﻿using Shared.Domain.Interfaces;
-using Shared.Domain.SeedWork;
+﻿using Shared.Domain.SeedWork;
 using Shared.Domain.ValueObjects;
 
 namespace Catalog.Domain.Entities;
 
-public class Topping : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
+public class Topping : AuditableEntity<int>
 {
     public string Name { get; private set; }
     public Slug Slug { get; private set; }
     public Money BasePrice { get; private set; }
     public string? ImageUrl { get; private set; } 
     public bool IsActive { get; private set; }
-
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
 
     protected Topping()
     {

@@ -3,7 +3,7 @@
 public class StoreProduct
 {
     public Guid StoreId { get; private set; } // ID từ module Stores
-    public int ProductId { get; private set; }
+    public Guid ProductId { get; private set; }
     public Product Product { get; private set; }
 
     // Logic nghiệp vụ cấu hình
@@ -24,7 +24,7 @@ public class StoreProduct
         Product = null!;
     }
 
-    public StoreProduct(Guid storeId, int productId, Product product, decimal? priceOverride = null)
+    public StoreProduct(Guid storeId, Guid productId, Product product, decimal? priceOverride = null)
     {
         StoreId = storeId;
         ProductId = productId;

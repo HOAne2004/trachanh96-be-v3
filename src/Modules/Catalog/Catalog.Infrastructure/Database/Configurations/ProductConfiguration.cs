@@ -13,7 +13,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasKey(x => x.Id);
 
-        builder.HasIndex(x => x.PublicId).IsUnique();
+        builder.HasIndex(x => x.Id).IsUnique();
 
         builder.Property(x => x.Name).IsRequired().HasMaxLength(255);
 

@@ -48,7 +48,7 @@ namespace Catalog.Application.Features.Products.Queries
                 Currency: t.PriceOverride.Currency)).ToList();
 
             var dto = new ProductDetailDto(
-                Id: product.PublicId,
+                Id: product.Id,
                 CategoryId: product.CategoryId,
                 StoreId: request.StoreId,
                 Name: product.Name,

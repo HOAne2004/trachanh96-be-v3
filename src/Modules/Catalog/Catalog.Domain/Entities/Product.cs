@@ -6,9 +6,8 @@ using Shared.Domain.Interfaces;
 
 namespace Catalog.Domain.Entities;
 
-public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
+public class Product : AggregateRoot<Guid>
 {
-    public Guid PublicId { get; private set; }
     public int CategoryId { get; private set; }
     public string Name { get; private set; }
     public Slug Slug { get; private set; }
@@ -33,11 +32,6 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
     public double TotalRatingScore { get; private set; } = 0;
     public int RatingCount { get; private set; } = 0;
     public double AverageRating => RatingCount == 0 ? 0 : Math.Round(TotalRatingScore / RatingCount, 1);
-
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
     public DateTime? PublishedAt { get; private set; }
 
     private readonly List<StoreProduct> _storeProducts = new();
@@ -57,7 +51,6 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         if (basePrepTimeInMinutes < 0)
             throw new ArgumentException("Thời gian chế biến không thể âm.");
 
-        PublicId = publicId;
         CategoryId = categoryId;
         Name = name.Trim();
         Slug = Slug.Create(Name);
@@ -66,7 +59,6 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         BasePrepTimeInMinutes = basePrepTimeInMinutes;
 
         Status = ProductStatusEnum.Draft;
-        IsDeleted = false;
     }
 
     public void UpdateDetails(string name, string? description, string? ingredients, string? imageUrl, int basePrepTimeInMinutes)
@@ -127,8 +119,8 @@ public class Product : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntit
         if (maxQuantity < 1 || maxQuantity > 5)
             throw new ArgumentException("Số lượng Topping tối đa cho phép cấu hình là từ 1 đến 5.");
 
-        if (_productToppings.Count >= 10 && !_productToppings.Any(t => t.ToppingId == toppingId))
-            throw new InvalidOperationException("Một sản phẩm không được cấu hình quá 10 loại Topping.");
+        if (_productToppings.Count >= 3 && !_productToppings.Any(t => t.ToppingId == toppingId))
+            throw new InvalidOperationException("Một sản phẩm không được cấu hình quá 3 loại Topping.");
 
         var existingTopping = _productToppings.FirstOrDefault(t => t.ToppingId == toppingId);
         if (existingTopping != null)

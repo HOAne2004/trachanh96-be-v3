@@ -3,20 +3,17 @@ using System;
 using Catalog.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Catalog.Infrastructure.Database.Migrations
+namespace Catalog.Infrastructure.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20260423084759_AddProductPublishedAt")]
-    partial class AddProductPublishedAt
+    partial class CatalogDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,8 +34,14 @@ namespace Catalog.Infrastructure.Database.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer");
@@ -48,6 +51,12 @@ namespace Catalog.Infrastructure.Database.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -62,9 +71,6 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");
@@ -74,11 +80,9 @@ namespace Catalog.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Catalog.Domain.Entities.Product", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.PrimitiveCollection<short[]>("AllowedIceLevels")
                         .IsRequired()
@@ -97,8 +101,14 @@ namespace Catalog.Infrastructure.Database.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -112,6 +122,12 @@ namespace Catalog.Infrastructure.Database.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -122,11 +138,11 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RatingCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -138,20 +154,17 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<double>("TotalRating")
+                    b.Property<double>("TotalRatingScore")
                         .HasColumnType("double precision");
 
                     b.Property<int>("TotalSold")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("PublicId")
+                    b.HasIndex("Id")
                         .IsUnique();
 
                     b.ToTable("Products", "catalog");
@@ -159,8 +172,8 @@ namespace Catalog.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Catalog.Domain.Entities.ProductSize", b =>
                 {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Size")
                         .HasMaxLength(10)
@@ -173,8 +186,8 @@ namespace Catalog.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Catalog.Domain.Entities.ProductTopping", b =>
                 {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("ToppingId")
                         .HasColumnType("integer");
@@ -186,7 +199,46 @@ namespace Catalog.Infrastructure.Database.Migrations
 
                     b.HasKey("ProductId", "ToppingId");
 
+                    b.HasIndex("ToppingId");
+
                     b.ToTable("ProductToppings", "catalog");
+                });
+
+            modelBuilder.Entity("Catalog.Domain.Entities.StoreProduct", b =>
+                {
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsAvailable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal?>("PriceOverride")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("RatingCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SoldCount")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("TotalRatingScore")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("StoreId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("StoreProducts", "catalog");
                 });
 
             modelBuilder.Entity("Catalog.Domain.Entities.Topping", b =>
@@ -200,14 +252,29 @@ namespace Catalog.Infrastructure.Database.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -218,9 +285,6 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -245,8 +309,8 @@ namespace Catalog.Infrastructure.Database.Migrations
 
                     b.OwnsOne("Shared.Domain.ValueObjects.Money", "BasePrice", b1 =>
                         {
-                            b1.Property<int>("ProductId")
-                                .HasColumnType("integer");
+                            b1.Property<Guid>("ProductId")
+                                .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
@@ -279,10 +343,10 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Shared.Domain.ValueObjects.Money", "PriceOverride", b1 =>
+                    b.OwnsOne("Shared.Domain.ValueObjects.Money", "PriceModifier", b1 =>
                         {
-                            b1.Property<int>("ProductSizeProductId")
-                                .HasColumnType("integer");
+                            b1.Property<Guid>("ProductSizeProductId")
+                                .HasColumnType("uuid");
 
                             b1.Property<string>("ProductSizeSize")
                                 .HasColumnType("character varying(10)");
@@ -290,13 +354,13 @@ namespace Catalog.Infrastructure.Database.Migrations
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
-                                .HasColumnName("PriceOverride_Amount");
+                                .HasColumnName("PriceModifier_Amount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasColumnName("PriceOverride_Currency");
+                                .HasColumnName("PPriceModifier_Currency");
 
                             b1.HasKey("ProductSizeProductId", "ProductSizeSize");
 
@@ -306,7 +370,7 @@ namespace Catalog.Infrastructure.Database.Migrations
                                 .HasForeignKey("ProductSizeProductId", "ProductSizeSize");
                         });
 
-                    b.Navigation("PriceOverride")
+                    b.Navigation("PriceModifier")
                         .IsRequired();
                 });
 
@@ -318,10 +382,16 @@ namespace Catalog.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Catalog.Domain.Entities.Topping", "Topping")
+                        .WithMany()
+                        .HasForeignKey("ToppingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.OwnsOne("Shared.Domain.ValueObjects.Money", "PriceOverride", b1 =>
                         {
-                            b1.Property<int>("ProductToppingProductId")
-                                .HasColumnType("integer");
+                            b1.Property<Guid>("ProductToppingProductId")
+                                .HasColumnType("uuid");
 
                             b1.Property<int>("ProductToppingToppingId")
                                 .HasColumnType("integer");
@@ -347,6 +417,19 @@ namespace Catalog.Infrastructure.Database.Migrations
 
                     b.Navigation("PriceOverride")
                         .IsRequired();
+
+                    b.Navigation("Topping");
+                });
+
+            modelBuilder.Entity("Catalog.Domain.Entities.StoreProduct", b =>
+                {
+                    b.HasOne("Catalog.Domain.Entities.Product", "Product")
+                        .WithMany("StoreProducts")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Catalog.Domain.Entities.Topping", b =>
@@ -384,6 +467,8 @@ namespace Catalog.Infrastructure.Database.Migrations
                     b.Navigation("ProductSizes");
 
                     b.Navigation("ProductToppings");
+
+                    b.Navigation("StoreProducts");
                 });
 #pragma warning restore 612, 618
         }
