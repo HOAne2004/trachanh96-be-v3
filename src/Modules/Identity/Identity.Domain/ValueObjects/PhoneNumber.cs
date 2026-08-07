@@ -1,8 +1,10 @@
-﻿using System.Text.RegularExpressions;
+﻿using Shared.Domain.Exceptions;
+using Shared.Domain.SeedWork;
+using System.Text.RegularExpressions;
 
 namespace Identity.Domain.ValueObjects;
 
-public record PhoneNumber
+public record PhoneNumber 
 {
     public string Value { get; }
 
@@ -14,9 +16,8 @@ public record PhoneNumber
     public static PhoneNumber Create(string rawPhone)
     {
         if (string.IsNullOrWhiteSpace(rawPhone))
-            throw new ArgumentException("Số điện thoại không được để trống.");
+            throw new DomainException("Số điện thoại không được để trống.");
 
-        // Bỏ tất cả ký tự không phải số
         var digits = Regex.Replace(rawPhone, @"\D", "");
 
         if (digits.StartsWith('0'))
@@ -29,19 +30,17 @@ public record PhoneNumber
         }
         else
         {
-            throw new ArgumentException("Số điện thoại phải bắt đầu bằng 0 hoặc 84 (đối với VN).");
+            throw new DomainException("Số điện thoại phải bắt đầu bằng 0 hoặc 84 (đối với VN).");
         }
 
         var normalized = "+" + digits;
 
-        // Valid length theo chuẩn quốc tế + VN
         if (normalized.Length < 11 || normalized.Length > 15)
-            throw new ArgumentException("Độ dài số điện thoại không hợp lệ.");
+            throw new DomainException("Độ dài số điện thoại không hợp lệ.");
 
         return new PhoneNumber(normalized);
     }
 
-    // Tiện ích cho UI hiển thị (0981 234 567)
     public string ToFormattedString()
     {
         if (Value.StartsWith("+84") && Value.Length == 12)
@@ -52,6 +51,5 @@ public record PhoneNumber
         return Value;
     }
 
-    // override ToString để dễ gọi
     public override string ToString() => Value;
 }
