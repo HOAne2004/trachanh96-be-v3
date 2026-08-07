@@ -1,7 +1,9 @@
 ﻿using FluentValidation;
+using Identity.Application.Common;
 using Identity.Application.Interfaces;
 using Shared.Application.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Shared.Application.Models;
 
 namespace Identity.Application.Features.Auth.Commands
@@ -21,34 +23,51 @@ namespace Identity.Application.Features.Auth.Commands
     public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, Result<string>>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IEmailService _emailService; 
+        private readonly IIdentityUnitOfWork _unitOfWork;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<ForgotPasswordCommandHandler> _logger;
+
+        private const string GenericMessage = "Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.";
 
         public ForgotPasswordCommandHandler(
             IUserRepository userRepository,
-            IEmailService emailService)
+            IIdentityUnitOfWork unitOfWork,
+            IEmailService emailService,
+            ILogger<ForgotPasswordCommandHandler> logger)
         {
             _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
             _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<Result<string>> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+
+            // Luôn trả về Success dù có tìm thấy User hay không (Chống User Enumeration)
             if (user == null)
             {
-                return Result<string>.Success("Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.");
+                return Result<string>.Success(GenericMessage);
             }
 
-            // 1. Sinh mã OTP
-            var resetToken = user.GeneratePasswordResetToken(expiryMinutes: 15);
+            // Dùng CSPRNG thay vì Guid.NewGuid() - nhất quán với JwtProvider.GenerateRefreshToken()
+            var resetToken = SecureTokenGenerator.GenerateReadableCode(8);
 
-            // 2. Lưu vào DB thông qua UnitOfWork
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            user.SetPasswordResetToken(resetToken, expiryMinutes: 15);
 
-            // 3. Gửi email thật (Nhớ dùng .Value vì Email giờ là Value Object)
-            await _emailService.SendResetPasswordEmailAsync(user.Email.Value, user.FullName, resetToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result<string>.Success("Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.");
+            try
+            {
+                await _emailService.SendResetPasswordEmailAsync(user.Email.Value, user.FullName, resetToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gửi email đặt lại mật khẩu thất bại cho UserId: {UserId}", user.Id);
+            }
+
+            return Result<string>.Success(GenericMessage);
         }
     }
 }

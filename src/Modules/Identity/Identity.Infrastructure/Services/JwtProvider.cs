@@ -1,6 +1,7 @@
 ﻿using Identity.Application.Interfaces;
-using Identity.Domain.Entities;
-using Microsoft.Extensions.Configuration;
+using Identity.Application.Models;
+using Identity.Application.Settings;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,52 +12,46 @@ namespace Identity.Infrastructure.Services;
 
 public class JwtProvider : IJwtProvider
 {
-    private readonly IConfiguration _config;
+    private readonly JwtOptions _jwtOptions;
 
-    public JwtProvider(IConfiguration config)
+    public JwtProvider(IOptions<JwtOptions> jwtOptions)
     {
-        _config = config;
+        _jwtOptions = jwtOptions.Value;
     }
 
-    // 1. Tạo Access Token (thời gian sống ngắn: 15-30 phút)
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(TokenUser user)
     {
-        var secretKey = _config["JwtSettings:Key"];
-        if (string.IsNullOrEmpty(secretKey))
-        {
-            throw new ArgumentNullException("JwtSettings:Key không được cấu hình trong appsettings.json.");
-        }
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.PublicId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("UserId", user.Id.ToString()),
-            new Claim("PublicId", user.PublicId.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Email, user.Email.Value),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim("SecurityStamp", user.SecurityStamp.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        foreach (var role in user.Roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(15), // Access Token sống 15 phút
+            Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes),
             SigningCredentials = creds,
-            Issuer = _config["JwtSettings:Issuer"],
-            Audience = _config["JwtSettings:Audience"]
+            Issuer = _jwtOptions.Issuer,
+            Audience = _jwtOptions.Audience
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
-
         return tokenHandler.WriteToken(token);
     }
 
-    // 2. Tạo Refresh Token (chuỗi ngẫu nhiên)
     public string GenerateRefreshToken()
     {
         var randomNumber = new byte[64];
@@ -65,9 +60,15 @@ public class JwtProvider : IJwtProvider
         return Convert.ToBase64String(randomNumber);
     }
 
-    // 3. Thời gian hết hạn của Refresh Token (7 ngày)
-    public DateTime GetRefreshTokenExpiry()
+    public DateTime GetRefreshTokenExpiry() => DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays);
+    public DateTime GetAccessTokenExpiry() => DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
+
+    public string HashToken(string token)
     {
-        return DateTime.UtcNow.AddDays(7);
+        using var sha256 = SHA256.Create();
+        var bytes = Encoding.UTF8.GetBytes(token);
+        var hash = sha256.ComputeHash(bytes);
+
+        return Convert.ToHexString(hash);
     }
 }

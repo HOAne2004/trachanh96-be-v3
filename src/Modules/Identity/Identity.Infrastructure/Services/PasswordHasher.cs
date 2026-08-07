@@ -6,22 +6,19 @@ namespace Identity.Infrastructure.Services
     {
         public string Hash(string password)
         {
-            // Sử dụng BCrypt để băm mật khẩu
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        public bool Verify(string password, string providedPassword)
+        public bool Verify(string plainPassword, string hashedPassword)
         {
             try
             {
-                // So sánh mật khẩu đã băm với mật khẩu gốc
-                return BCrypt.Net.BCrypt.Verify( providedPassword, password);
+                return BCrypt.Net.BCrypt.Verify(plainPassword, hashedPassword);
             }
             catch (Exception)
             {
                 return false;
             }
-
         }
 
     }

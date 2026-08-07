@@ -2,51 +2,72 @@
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
+using Shared.Application.Interfaces;
+using Shared.Domain.Exceptions;
 
 namespace Identity.Application.Features.Auth.Commands;
 
-// 1. Command
 public record LogoutCommand(
-    Guid UserPublicId
+    string RefreshToken
 ) : IRequest<Result<bool>>;
 
-// 2. Validator
 public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
 {
     public LogoutCommandValidator()
     {
-        RuleFor(x => x.UserPublicId)
-            .NotEmpty().WithMessage("UserPublicId không được để trống");
+        RuleFor(x => x.RefreshToken)
+            .NotEmpty().WithMessage("RefreshToken không được để trống");
     }
 }
 
-// 3. Handler
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<bool>>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IJwtProvider _jwtProvider;
+    private readonly ICurrentUser _currentUser;
+    private readonly IIdentityUnitOfWork _unitOfWork;
 
-    public LogoutCommandHandler(IUserRepository userRepository)
+    public LogoutCommandHandler(
+        IUserRepository userRepository,
+        IJwtProvider jwtProvider,
+        ICurrentUser currentUser,
+        IIdentityUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
+        _jwtProvider = jwtProvider;
+        _currentUser = currentUser;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
-        // 1. Tìm user theo PublicId
-        var user = await _userRepository.GetByPublicIdAsync(request.UserPublicId, cancellationToken);
+        if (!_currentUser.IsAuthenticated)
+            return Result<bool>.Failure("Bạn chưa đăng nhập.");
+
+        var user = await _userRepository.GetByIdAsync(_currentUser.UserId, cancellationToken);
 
         if (user == null)
         {
-            return Result<bool>.Failure("Không tìm thấy người dùng");
+            return Result<bool>.Failure("Không tìm thấy người dùng.");
         }
 
-        // 2. Xóa Refresh Token khỏi User entity
-        user.RevokeRefreshToken();
+        var hashedToken = _jwtProvider.HashToken(request.RefreshToken);
 
-        // 3. Lưu thay đổi
+        try
+        {
+            user.RevokeSession(hashedToken);
+        }
+        catch (DomainException)
+        {
+            // Chỉ bắt riêng DomainException ("Không tìm thấy phiên đăng nhập.") - coi như đã
+            // đăng xuất, không cần báo lỗi. Các Exception khác (lỗi hệ thống thật) sẽ propagate
+            // ra ngoài thay vì bị nuốt thành "Success" giả.
+            return Result<bool>.Success(true);
+        }
+
         await _userRepository.UpdateAsync(user, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken); // Bắt buộc: lưu trạng thái Revoke
 
-        // 4. Trả về kết quả thành công
         return Result<bool>.Success(true);
     }
 }

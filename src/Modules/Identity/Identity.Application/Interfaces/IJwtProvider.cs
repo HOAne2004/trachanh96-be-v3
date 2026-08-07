@@ -1,10 +1,12 @@
-﻿using Identity.Domain.Entities;
-namespace Identity.Application.Interfaces
+﻿using Identity.Application.Models;
+
+namespace Identity.Application.Interfaces;
+
+public interface IJwtProvider
 {
-    public interface IJwtProvider
-    {
-        string GenerateAccessToken(User user);
-        string GenerateRefreshToken();
-        DateTime GetRefreshTokenExpiry();
-    }
+    string GenerateAccessToken(TokenUser user); 
+    string GenerateRefreshToken();
+    DateTime GetRefreshTokenExpiry();
+    DateTime GetAccessTokenExpiry();
+    string HashToken(string token);
 }
