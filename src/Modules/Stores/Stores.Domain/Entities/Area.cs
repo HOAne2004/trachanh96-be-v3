@@ -3,7 +3,7 @@ using Shared.Domain.SeedWork;
 
 namespace Stores.Domain.Entities;
 
-public class Area : Entity<int>, ISoftDeletableEntity
+public class Area : Entity<int>
 {
     public int StoreId { get; private set; }
     public string Name { get; private set; }
