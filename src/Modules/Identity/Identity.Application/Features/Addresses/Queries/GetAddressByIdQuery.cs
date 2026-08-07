@@ -1,61 +1,81 @@
-﻿using Identity.Application.DTOs;
+﻿using FluentValidation;
+using Identity.Application.DTOs.Request;
 using Identity.Application.Interfaces;
 using MediatR;
+using Shared.Application.Interfaces;
 using Shared.Application.Models;
 
-namespace Identity.Application.Features.Addresses.Queries
+namespace Identity.Application.Features.Addresses.Queries;
+
+// ==========================================================
+// 1. THE QUERY (Chỉ nhận AddressId, cấm nhận UserId từ ngoài)
+// ==========================================================
+public record GetAddressByIdQuery(Guid AddressId) : IRequest<Result<AddressDto>>;
+
+// ==========================================================
+// 2. THE VALIDATOR
+// ==========================================================
+public class GetAddressByIdQueryValidator : AbstractValidator<GetAddressByIdQuery>
 {
-    // ==========================================================
-    // 1. THE QUERY (Yêu cầu lấy chi tiết một địa chỉ)
-    // ==========================================================
-    public record GetAddressByIdQuery(Guid UserPublicId, int AddressId) : IRequest<Result<AddressDto>>;
-
-    // ==========================================================
-    // 2. THE HANDLER (Xử lý truy vấn)
-    // ==========================================================
-    public class GetAddressByIdQueryHandler : IRequestHandler<GetAddressByIdQuery, Result<AddressDto>>
+    public GetAddressByIdQueryValidator()
     {
-        private readonly IUserRepository _userRepository;
+        RuleFor(x => x.AddressId)
+            .NotEmpty().WithMessage("ID địa chỉ không được để trống.");
+    }
+}
 
-        public GetAddressByIdQueryHandler(IUserRepository userRepository)
+// ==========================================================
+// 3. THE HANDLER
+// ==========================================================
+public class GetAddressByIdQueryHandler : IRequestHandler<GetAddressByIdQuery, Result<AddressDto>>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly ICurrentUser _currentUser; // Chìa khóa chống IDOR
+
+    public GetAddressByIdQueryHandler(
+        IUserRepository userRepository,
+        ICurrentUser currentUser)
+    {
+        _userRepository = userRepository;
+        _currentUser = currentUser;
+    }
+
+    public async Task<Result<AddressDto>> Handle(GetAddressByIdQuery request, CancellationToken cancellationToken)
+    {
+        // 1. Chặn request không hợp lệ
+        if (!_currentUser.IsAuthenticated)
+            return Result<AddressDto>.Failure("Bạn chưa đăng nhập.");
+
+        // 2. Lấy User từ DB qua _currentUser.UserId (Đã Include Addresses)
+        var user = await _userRepository.GetByIdAsync(_currentUser.UserId, cancellationToken);
+        if (user == null || user.IsDeleted)
         {
-            _userRepository = userRepository;
+            return Result<AddressDto>.Failure("Không tìm thấy tài khoản người dùng.");
         }
 
-        public async Task<Result<AddressDto>> Handle(GetAddressByIdQuery request, CancellationToken cancellationToken)
+        // 3. Tìm địa chỉ cụ thể trong tập hợp địa chỉ của CHÍNH User đó
+        var address = user.Addresses.FirstOrDefault(a => a.Id == request.AddressId);
+
+        if (address == null)
         {
-            // 1. Lấy User kèm danh sách địa chỉ
-            var user = await _userRepository.GetByPublicIdAsync(request.UserPublicId, cancellationToken);
-            if (user == null)
-            {
-                return Result<AddressDto>.Failure("Không tìm thấy tài khoản người dùng.");
-            }
-
-            // 2. Tìm địa chỉ cụ thể trong tập hợp của User
-            // Vì ta dùng Hard Delete nên không cần check IsDeleted nữa
-            var address = user.Addresses.FirstOrDefault(a => a.Id == request.AddressId);
-
-            if (address == null)
-            {
-                return Result<AddressDto>.Failure("Địa chỉ không tồn tại hoặc bạn không có quyền truy cập.");
-            }
-
-            // 3. Map sang DTO
-            var dto = new AddressDto{
-                Id = address.Id,
-                RecipientName = address.RecipientName,
-                Phone = address.RecipientPhone.Value,
-                FullAddress = address.FullAddress,
-                AddressDetail = address.AddressDetail,
-                Province = address.Province,
-                District = address.District,
-                Commune = address.Commune,
-                Latitude = address.Latitude,
-                Longitude = address.Longitude,
-                IsDefault = address.IsDefault
-            };
-
-            return Result<AddressDto>.Success(dto);
+            return Result<AddressDto>.Failure("Địa chỉ không tồn tại hoặc bạn không có quyền truy cập.");
         }
+
+        // 4. Map sang DTO an toàn với Value Object
+        var dto = new AddressDto(
+            Id: address.Id,
+            RecipientName: address.RecipientName,
+            Phone: address.RecipientPhone.Value, // Lấy giá trị chuỗi từ ValueObject
+            FullAddress: address.FullAddress,
+            AddressDetail: address.AddressDetail,
+            Province: address.Province,
+            District: address.District,
+            Commune: address.Commune,
+            Latitude: address.Location?.Latitude,   // Bắt null an toàn
+            Longitude: address.Location?.Longitude, // Bắt null an toàn
+            IsDefault: address.IsDefault
+        );
+
+        return Result<AddressDto>.Success(dto);
     }
 }
