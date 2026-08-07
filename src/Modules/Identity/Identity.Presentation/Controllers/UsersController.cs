@@ -1,86 +1,125 @@
-﻿using Identity.Application.Features.Auth.Commands;
+﻿using Identity.Application.Features.Addresses.Commands;
+using Identity.Application.Features.Addresses.Queries;
+using Identity.Application.Features.Auth.Commands;
+using Identity.Application.Features.Auth.Queries;
 using Identity.Application.Features.Users.Commands;
-using Identity.Application.Features.Users.Queries; 
+using Identity.Application.Features.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Shared.Application.Models;
 using Shared.Presentation.Controllers;
-using System.Security.Claims;
 
 namespace Identity.Presentation.Controllers;
 
 [Route("api/identity/users/me")]
-[Authorize]
+[Authorize] // Cổng gác cơ bản: Yêu cầu đăng nhập
 public class UsersController : BaseApiController
 {
-    // Hàm Helper để tái sử dụng việc lấy PublicId từ Token
-    private Guid GetCurrentUserPublicId()
-    {
-        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdString, out var publicId) ? publicId : Guid.Empty;
-    }
+    // --- PROFILE MANAGEMENT ---
 
     [HttpGet]
-    public async Task<IActionResult> GetProfile()
+    public async Task<IActionResult> GetMyProfile()
     {
-        var publicId = GetCurrentUserPublicId();
-        if (publicId == Guid.Empty)
-            return Unauthorized(new ErrorResponse("INVALID_TOKEN", "Token không hợp lệ."));
-
-        var result = await Mediator.Send(new GetProfileQuery(publicId));
-        return HandleResult(result);
-    }
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        // Lấy UserPublicId từ claims (đã được set trong token khi login)
-        var userPublicIdClaim = User.FindFirst("PublicId")?.Value
-                                 ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-
-        if (string.IsNullOrEmpty(userPublicIdClaim) || !Guid.TryParse(userPublicIdClaim, out Guid userPublicId))
-        {
-            return BadRequest(new { message = "Không thể xác định người dùng từ token" });
-        }
-
-        var command = new LogoutCommand(userPublicId);
-        var result = await Mediator.Send(command);
-
+        var result = await Mediator.Send(new GetProfileQuery()); // Không cần truyền ID!
         return HandleResult(result);
     }
 
     [HttpPut]
-    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command)
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileCommand command)
     {
-        // Gắn Id từ Token vào để bảo mật IDOR
-        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
-        var result = await Mediator.Send(secureCommand);
-        return HandleResult(result, "Cập nhật thông tin cá nhân thành công!");
+        var result = await Mediator.Send(command); // Không cần truyền ID!
+        return HandleResult(result);
     }
 
     [HttpPut("password")]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
+    public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordCommand command)
     {
-        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
-        var result = await Mediator.Send(secureCommand);
-        return HandleResult(result, "Đổi mật khẩu thành công!");
+        var result = await Mediator.Send(command);
+        return HandleResult(result);
     }
 
     [HttpPut("email")]
-    public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailCommand command)
+    public async Task<IActionResult> RequestChangeMyEmail([FromBody] RequestChangeEmailCommand command)
     {
-        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
-        var result = await Mediator.Send(secureCommand);
-        return HandleResult(result, "Đổi email thành công!");
+        var result = await Mediator.Send(command);
+        return HandleResult(result);
     }
 
     [HttpPost("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] Application.Features.Users.Commands.VerifyEmailCommand command)
     {
-        var secureCommand = command with { UserPublicId = GetCurrentUserPublicId() };
+        // Controller không cần phải chế biến ID nữa, Handler sẽ tự lo qua ICurrentUser
+        var result = await Mediator.Send(command);
+        return HandleResult(result);
+    }
+    // --- SESSION MANAGEMENT ---
+
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetMySessions()
+    {
+        var result = await Mediator.Send(new GetMyActiveSessionsQuery());
+        return HandleResult(result);
+    }
+
+    [HttpDelete("sessions/{sessionId:guid}")]
+    public async Task<IActionResult> RevokeDeviceSession(Guid sessionId)
+    {
+        var result = await Mediator.Send(new RevokeDeviceSessionCommand(sessionId));
+        return HandleResult(result, "Đã đăng xuất khỏi thiết bị đã chọn.");
+    }
+
+    [HttpDelete("sessions")]
+    public async Task<IActionResult> RevokeAllSessions()
+    {
+        var result = await Mediator.Send(new RevokeAllSessionsCommand());
+        return HandleResult(result, "Đã đăng xuất khỏi tất cả các thiết bị.");
+    }
+
+    // ==========================================================
+    // --- SỔ ĐỊA CHỈ (ADDRESS BOOK MANAGEMENT) ---
+    // ==========================================================
+
+    [HttpGet("addresses")]
+    public async Task<IActionResult> GetMyAddresses()
+    {
+        var result = await Mediator.Send(new GetMyAddressesQuery());
+        return HandleResult(result);
+    }
+
+    [HttpGet("addresses/{addressId:guid}")]
+    public async Task<IActionResult> GetMyAddressById(Guid addressId)
+    {
+        var result = await Mediator.Send(new GetAddressByIdQuery(addressId));
+        return HandleResult(result);
+    }
+
+    [HttpPost("addresses")]
+    public async Task<IActionResult> AddAddress([FromBody] AddAddressCommand command)
+    {
+        var result = await Mediator.Send(command);
+        return HandleResult(result, "Thêm địa chỉ giao hàng thành công.");
+    }
+
+    [HttpPut("addresses/{addressId:guid}")]
+    public async Task<IActionResult> UpdateAddress(Guid addressId, [FromBody] UpdateAddressCommand command)
+    {
+        // Gắn ID từ URL vào Command để bảo đảm không bị lệch dữ liệu
+        var secureCommand = command with { AddressId = addressId };
         var result = await Mediator.Send(secureCommand);
         return HandleResult(result);
     }
 
+    [HttpDelete("addresses/{addressId:guid}")]
+    public async Task<IActionResult> DeleteAddress(Guid addressId)
+    {
+        var result = await Mediator.Send(new DeleteAddressCommand(addressId));
+        return HandleResult(result);
+    }
 
+    [HttpPatch("addresses/{addressId:guid}/default")]
+    public async Task<IActionResult> SetDefaultAddress(Guid addressId)
+    {
+        // Dùng HttpPatch vì đây là hành động cập nhật 1 phần nhỏ (cờ IsDefault)
+        var result = await Mediator.Send(new SetDefaultAddressCommand(addressId));
+        return HandleResult(result);
+    }
 }
