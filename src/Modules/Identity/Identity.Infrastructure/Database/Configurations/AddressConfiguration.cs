@@ -9,34 +9,56 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
 {
     public void Configure(EntityTypeBuilder<Address> builder)
     {
-        // 1. Tên bảng và Khóa chính
         builder.ToTable("Addresses");
-        builder.HasKey(x => x.Id);
 
-        // 2. Cấu hình các cột cơ bản (Đồng bộ độ dài với Rule Validation ở Entity)
-        builder.Property(x => x.RecipientName).IsRequired().HasMaxLength(150);
-        builder.Property(x => x.AddressDetail).IsRequired().HasMaxLength(300);
+        builder.HasKey(a => a.Id);
 
-        // Tỉnh/Huyện/Xã thường không dài quá 100 ký tự
-        builder.Property(x => x.Province).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.District).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Commune).IsRequired().HasMaxLength(100);
+        builder.Property(a => a.RecipientName)
+            .HasMaxLength(150)
+            .IsRequired();
 
-        // 3. Dạy EF Core cách Map Value Object (PhoneNumber)
-        builder.Property(x => x.RecipientPhone)
+        // Value Object PhoneNumber
+        builder.Property(a => a.RecipientPhone)
             .HasConversion(
-                phoneNumber => phoneNumber!.Value,
-                dbValue => PhoneNumber.Create(dbValue!)
-            )
-            .IsRequired()
-            .HasMaxLength(20);
+                phone => phone.Value,
+                value => PhoneNumber.Create(value))
+            .HasColumnName("RecipientPhone")
+            .HasMaxLength(20)
+            .IsRequired();
 
-        // 4. Tọa độ (Có thể Null)
-        builder.Property(x => x.Latitude).IsRequired(false);
-        builder.Property(x => x.Longitude).IsRequired(false);
+        builder.Property(a => a.AddressDetail)
+            .HasMaxLength(300)
+            .IsRequired();
 
-        // 5. BỎ QUA Computed Property
-        // Báo cho EF Core biết FullAddress chỉ dùng trong C#, không được tạo cột trong DB
-        builder.Ignore(x => x.FullAddress);
+        builder.Property(a => a.Province)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(a => a.District)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(a => a.Commune)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        // Sử dụng OwnsOne để tách thuộc tính nhưng vẫn lưu cùng bảng Addresses (2 cột Latitude, Longitude)
+        builder.OwnsOne(a => a.Location, loc =>
+        {
+            loc.Property(l => l.Latitude)
+               .HasColumnName("Latitude")
+               .IsRequired(false);
+
+            loc.Property(l => l.Longitude)
+               .HasColumnName("Longitude")
+               .IsRequired(false);
+        });
+
+        builder.Property(a => a.CreatedBy).HasMaxLength(100);
+        builder.Property(a => a.LastModifiedBy).HasMaxLength(100);
+        builder.Property(a => a.DeletedBy).HasMaxLength(100);
+
+        // Soft Delete Filter
+        builder.HasQueryFilter(a => !a.IsDeleted);
     }
 }
