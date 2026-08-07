@@ -117,4 +117,13 @@ public class UserRepository : IUserRepository
             .Select(u => (Guid?)u.SecurityStamp)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<List<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserSessions
+            .Where(s => s.UserId == userId && !s.IsRevoked && s.ExpiryDate > DateTime.UtcNow)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
 }

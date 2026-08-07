@@ -54,14 +54,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
-        // BẢO MẬT: Xác thực mật khẩu TRƯỚC khi tiết lộ bất kỳ trạng thái tài khoản nào
-        // (IsDeleted/Locked). Nếu kiểm tra trạng thái trước khi verify mật khẩu, kẻ tấn công
-        // có thể dò trạng thái tài khoản chỉ bằng cách gửi MẬT KHẨU SAI - vi phạm nguyên tắc
-        // chống User Enumeration đã áp dụng nhất quán ở ForgotPasswordCommand.
         if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            // Chỉ tăng đếm sai nếu User thực sự tồn tại và chưa bị xóa mềm - tránh làm bẩn
-            // FailedLoginAttempts/Status của một tài khoản đã xóa.
             if (user != null && !user.IsDeleted)
             {
                 user.IncreaseFailedLogin();
@@ -72,8 +66,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             return Result<LoginResponseDto>.Failure("Email hoặc mật khẩu không đúng.");
         }
 
-        // Mật khẩu đã đúng - từ đây an toàn để tiết lộ trạng thái tài khoản cụ thể,
-        // vì người gọi đã chứng minh được quyền sở hữu thông tin đăng nhập.
         if (user.IsDeleted)
             return Result<LoginResponseDto>.Failure("Tài khoản đã bị xóa.");
 
@@ -83,34 +75,34 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             {
                 return Result<LoginResponseDto>.Failure($"Tài khoản đang bị khóa đến {user.LockoutEnd:dd/MM/yyyy HH:mm}");
             }
-            user.UnlockAccount(); // Hết hạn khóa -> Tự mở
+            user.UnlockAccount();
         }
 
-        user.ResetFailedLogin(); // Đăng nhập thành công -> Reset đếm sai
+        user.ResetFailedLogin();
 
         var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
         var roles = await _roleRepository.GetRolesByIdsAsync(roleIds, cancellationToken);
         var roleNames = roles.Select(r => r.NormalizedName).ToList();
 
-        var tokenUser = new TokenUser(user.Id, user.Email.Value, user.FullName, roleNames, user.SecurityStamp);
-
-        var accessToken = _jwtProvider.GenerateAccessToken(tokenUser);
+        // ĐẢO THỨ TỰ: tạo Refresh Token + Session TRƯỚC, vì UserSession.Id được sinh ngay
+        // trong constructor (Guid.CreateVersion7(), không cần chờ SaveChanges) - nên có thể
+        // lấy SessionId ngay để nhúng vào Access Token bên dưới.
         var refreshToken = _jwtProvider.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtProvider.GetRefreshTokenExpiry();
-        var accessTokenExpiry = _jwtProvider.GetAccessTokenExpiry(); // Lấy đúng từ 1 nguồn duy nhất, không hardcode lại
-
         var refreshTokenHash = _jwtProvider.HashToken(refreshToken);
 
-        user.AddSession(
+        var session = user.AddSession(
             refreshTokenHash,
             refreshTokenExpiry,
             request.DeviceName ?? "Unknown Device",
             request.IpAddress ?? "Unknown IP"
         );
 
+        var tokenUser = new TokenUser(user.Id, user.Email.Value, user.FullName, roleNames, user.SecurityStamp, session.Id);
+        var accessToken = _jwtProvider.GenerateAccessToken(tokenUser);
+        var accessTokenExpiry = _jwtProvider.GetAccessTokenExpiry();
+
         await _userRepository.UpdateAsync(user, cancellationToken);
-        // Bắt buộc: nếu không, ResetFailedLogin/AddSession sẽ KHÔNG được lưu xuống DB
-        // (xem VẤN ĐỀ 0 - cần xác nhận IdentityTransactionBehavior có tự save cho IRequest<T> hay không).
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LoginResponseDto>.Success(new LoginResponseDto(

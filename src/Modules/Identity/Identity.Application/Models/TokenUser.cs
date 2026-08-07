@@ -5,5 +5,6 @@ public sealed record TokenUser(
     string Email,
     string FullName,
     IReadOnlyList<string> Roles,
-    Guid SecurityStamp
+    Guid SecurityStamp,
+    Guid SessionId
 );

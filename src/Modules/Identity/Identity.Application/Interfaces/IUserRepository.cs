@@ -15,5 +15,6 @@ public interface IUserRepository
     Task<User?> GetByIdWithDeletedAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<Guid?> GetSecurityStampAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<List<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
 }

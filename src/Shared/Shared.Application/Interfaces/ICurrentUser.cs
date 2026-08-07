@@ -28,4 +28,13 @@ public interface ICurrentUser
     /// Hàm tiện ích kiểm tra nhanh Role.
     /// </summary>
     bool IsInRole(string role);
+
+    /// <summary>
+    /// SessionId gắn với access token hiện tại (đọc từ claim "SessionId").
+    /// Null nếu chưa đăng nhập hoặc token không mang claim này (VD: token cũ phát hành
+    /// trước khi tính năng này được thêm - sẽ tự hết claim sau khi access token cũ hết hạn,
+    /// thường tối đa AccessTokenExpirationMinutes phút).
+    /// </summary>
+    Guid? SessionId { get; }
+
 }

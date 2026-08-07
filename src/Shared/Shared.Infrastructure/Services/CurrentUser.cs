@@ -70,4 +70,17 @@ public class CurrentUser : ICurrentUser
     {
         return Roles.Contains(role);
     }
+
+    public Guid? SessionId
+    {
+        get
+        {
+            if (!IsAuthenticated) return null;
+
+            var sessionIdClaim = User?.FindFirst("SessionId");
+            return sessionIdClaim != null && Guid.TryParse(sessionIdClaim.Value, out var sessionId)
+                ? sessionId
+                : null;
+        }
+    }
 }

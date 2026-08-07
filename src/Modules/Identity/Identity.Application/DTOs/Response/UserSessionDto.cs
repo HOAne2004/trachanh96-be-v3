@@ -1,5 +1,4 @@
-﻿
-namespace Identity.Application.DTOs.Request
+﻿namespace Identity.Application.DTOs.Response
 {
     public record UserSessionDto(
         Guid SessionId,
