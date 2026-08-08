@@ -3,9 +3,6 @@ using Identity.Application.DTOs.Request;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Identity.Application.Features.Users.Queries
 {
@@ -16,7 +13,7 @@ namespace Identity.Application.Features.Users.Queries
         int PageIndex = 1,
         int PageSize = 10,
         string? SearchTerm = null,
-        Guid? RoleId = null, // Filter theo ID của Role cho chuẩn xác
+        Guid? RoleId = null, 
         string? Status = null
     ) : IRequest<Result<PagedResult<UserAdminDto>>>;
 
@@ -29,7 +26,7 @@ namespace Identity.Application.Features.Users.Queries
         {
             RuleFor(x => x.PageIndex).GreaterThan(0).WithMessage("Trang hiện tại phải lớn hơn 0.");
             RuleFor(x => x.PageSize)
-                .GreaterThan(0)
+                .GreaterThan(0).WithMessage("Số bản ghi mỗi trang phải lớn hơn 0.")
                 .LessThanOrEqualTo(100).WithMessage("Không được lấy quá 100 bản ghi mỗi lần.");
         }
     }
