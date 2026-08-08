@@ -19,6 +19,10 @@ public class User : AggregateRoot<Guid>
 
     #region [ Properties ]
     public EmailAddress Email { get; private set; }
+
+    /// <summary>Email mới đang chờ xác nhận OTP (mô hình 2 bước) - null nếu không có yêu cầu nào đang chờ.</summary>
+    public string? PendingEmail { get; private set; }
+
     public string FullName { get; private set; }
     public PhoneNumber? Phone { get; private set; }
     public string? ThumbnailUrl { get; private set; }
@@ -28,6 +32,7 @@ public class User : AggregateRoot<Guid>
     public bool EmailVerified { get; private set; }
     public string? VerificationToken { get; private set; }
     public DateTime? VerificationTokenExpiresAt { get; private set; }
+    public int EmailVerificationAttempts { get; private set; }
 
     public int FailedLoginAttempts { get; private set; }
     public DateTime? LockoutEnd { get; private set; }
@@ -35,7 +40,6 @@ public class User : AggregateRoot<Guid>
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiresAt { get; private set; }
     public int PasswordResetAttempts { get; private set; }
-    public int EmailVerificationAttempts { get; private set; }
     #endregion
 
     #region [ Navigation ]
@@ -63,7 +67,6 @@ public class User : AggregateRoot<Guid>
         SetFullName(fullName);
         PasswordHash = passwordHash;
         Status = UserStatusEnum.Active;
-        SecurityStamp = Guid.NewGuid();
 
         if (!string.IsNullOrWhiteSpace(rawPhone))
             Phone = PhoneNumber.Create(rawPhone);
@@ -77,7 +80,7 @@ public class User : AggregateRoot<Guid>
         {
             Status = UserStatusEnum.Locked;
             LockoutEnd = DateTime.UtcNow.AddMinutes(DefaultLockoutMinutes);
-            RevokeAllSessions(); // Tự động văng mọi thiết bị khi bị khóa
+            RevokeAllSessions();
             UpdateSecurityStamp();
             AddDomainEvent(new UserAccountLockedEvent(Id, LockoutEnd.Value));
         }
@@ -125,7 +128,6 @@ public class User : AggregateRoot<Guid>
         FailedLoginAttempts = 0;
     }
 
-    // Tầng Application sẽ gọi Generate OTP và truyền vào hàm này
     public void SetVerificationToken(string token, double expiryHours = 24)
     {
         VerificationToken = token;
@@ -143,9 +145,7 @@ public class User : AggregateRoot<Guid>
 
         if (VerificationTokenExpiresAt < DateTime.UtcNow)
         {
-            VerificationToken = null;
-            VerificationTokenExpiresAt = null;
-            EmailVerificationAttempts = 0;
+            ClearVerificationState();
             throw new DomainException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
         }
 
@@ -154,24 +154,21 @@ public class User : AggregateRoot<Guid>
             EmailVerificationAttempts++;
             if (EmailVerificationAttempts >= MaxEmailVerificationAttempts)
             {
-                VerificationToken = null;
-                VerificationTokenExpiresAt = null;
-                EmailVerificationAttempts = 0;
+                ClearVerificationState();
                 throw new DomainException("Bạn đã nhập sai mã quá số lần cho phép. Vui lòng yêu cầu gửi lại mã mới.");
             }
             throw new DomainException("Mã xác thực không chính xác.");
         }
 
         EmailVerified = true;
-        VerificationToken = null;
-        VerificationTokenExpiresAt = null;
-        EmailVerificationAttempts = 0;
+        ClearVerificationState();
     }
+
     public void SetPasswordResetToken(string token, int expiryMinutes = 15)
     {
         PasswordResetToken = token;
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
-        PasswordResetAttempts = 0; // Reset đếm mỗi khi có token MỚI được cấp
+        PasswordResetAttempts = 0;
     }
 
     public void ResetPassword(string token, string newPasswordHash)
@@ -181,9 +178,7 @@ public class User : AggregateRoot<Guid>
 
         if (PasswordResetTokenExpiresAt < DateTime.UtcNow)
         {
-            PasswordResetToken = null;
-            PasswordResetTokenExpiresAt = null;
-            PasswordResetAttempts = 0;
+            ClearPasswordResetState();
             throw new DomainException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
         }
 
@@ -192,37 +187,20 @@ public class User : AggregateRoot<Guid>
             PasswordResetAttempts++;
             if (PasswordResetAttempts >= MaxPasswordResetAttempts)
             {
-                PasswordResetToken = null;
-                PasswordResetTokenExpiresAt = null;
-                PasswordResetAttempts = 0;
+                ClearPasswordResetState();
                 throw new DomainException("Bạn đã nhập sai mã quá số lần cho phép. Vui lòng yêu cầu gửi lại mã mới.");
             }
             throw new DomainException("Mã xác thực không chính xác.");
         }
 
         ChangePassword(newPasswordHash);
-
-        PasswordResetToken = null;
-        PasswordResetTokenExpiresAt = null;
-        PasswordResetAttempts = 0;
+        ClearPasswordResetState();
 
         RevokeAllSessions();
         UpdateSecurityStamp();
         ResetFailedLogin();
 
         AddDomainEvent(new UserPasswordResetEvent(Id));
-    }
-
-    /// <summary>
-    /// Đánh dấu Domain Event "User này được Admin tạo" kèm Role được gán ngay lúc tạo.
-    /// Không thể raise sẵn trong constructor vì User(...) constructor dùng chung cho cả
-    /// RegisterUserCommand (tự đăng ký) lẫn CreateUserByAdminCommand (Admin tạo) - cần Handler
-    /// gọi tường minh sau khi biết rõ ngữ cảnh, theo đúng convention "ByAdmin" đã có
-    /// (VerifyEmailByAdmin, AdminUpdateUser).
-    /// </summary>
-    public void MarkCreatedByAdmin(IEnumerable<Guid> assignedRoleIds)
-    {
-        AddDomainEvent(new UserCreatedByAdminEvent(Id, assignedRoleIds.ToList()));
     }
     #endregion
 
@@ -256,13 +234,11 @@ public class User : AggregateRoot<Guid>
             session.Revoke();
     }
 
-    // Bổ sung lại hàm kiểm tra tính hợp lệ của RefreshToken
     public bool IsRefreshTokenValid(string refreshTokenHash)
     {
         var session = _sessions.FirstOrDefault(s => s.RefreshTokenHash == refreshTokenHash);
         return session != null && session.IsValid();
     }
-
     #endregion
 
     #region [ Profile Behaviors ]
@@ -296,18 +272,16 @@ public class User : AggregateRoot<Guid>
         else
             Phone = PhoneNumber.Create(rawPhone);
 
-        // Kiểm tra xem Admin có đổi Email không
         var newEmail = EmailAddress.Create(email);
         if (Email.Value != newEmail.Value)
         {
             var oldEmail = Email.Value;
             Email = newEmail;
-            // BẢO MẬT: Admin thao tác nên tự động xác thực email mới
             EmailVerified = true;
-            VerificationToken = null;
-            VerificationTokenExpiresAt = null;
+            // Admin đổi email trực tiếp -> hủy luôn mọi yêu cầu đổi email self-service đang chờ
+            // (nếu có), tránh xung đột giữa 2 nguồn thay đổi email cùng lúc.
+            ClearVerificationState();
 
-            // Văng thiết bị cũ để bắt user đăng nhập lại bằng email mới cho an toàn
             RevokeAllSessions();
             UpdateSecurityStamp();
 
@@ -315,21 +289,74 @@ public class User : AggregateRoot<Guid>
         }
     }
 
-    public void ChangeEmail(string newEmail)
+    /// <summary>
+    /// Bước 1/2 của luồng đổi Email tự-phục-vụ: CHỈ lưu email mới vào PendingEmail và sinh OTP -
+    /// KHÔNG đụng đến Email/EmailVerified/Session/SecurityStamp hiện tại. Nếu người dùng gõ nhầm
+    /// email mới, tài khoản vẫn nguyên vẹn, vẫn đăng nhập bình thường bằng email cũ - chỉ cần gọi
+    /// lại hàm này với địa chỉ đúng. Email chỉ thực sự đổi khi ConfirmEmailChange() xác nhận đúng OTP.
+    /// </summary>
+    public void RequestEmailChange(string newEmail, string token, double expiryHours = 24)
     {
-        var email = EmailAddress.Create(newEmail);
-        if (Email.Value == email.Value) return;
+        var normalizedNewEmail = EmailAddress.Create(newEmail).Value;
+
+        if (normalizedNewEmail == Email.Value)
+            throw new DomainException("Email mới phải khác với Email hiện tại.");
+
+        PendingEmail = normalizedNewEmail;
+        VerificationToken = token;
+        VerificationTokenExpiresAt = DateTime.UtcNow.AddHours(expiryHours);
+        EmailVerificationAttempts = 0;
+    }
+
+    /// <summary>
+    /// Bước 2/2: xác nhận OTP gửi tới PendingEmail. Chỉ khi đúng, Email mới mới thực sự được
+    /// áp dụng - đây mới là thời điểm cần Revoke session/đổi SecurityStamp, vì định danh đăng
+    /// nhập (Email) thực sự vừa thay đổi.
+    /// </summary>
+    public void ConfirmEmailChange(string token)
+    {
+        if (string.IsNullOrWhiteSpace(PendingEmail))
+            throw new DomainException("Không có yêu cầu đổi email nào đang chờ xác nhận.");
+
+        if (string.IsNullOrWhiteSpace(VerificationToken))
+            throw new DomainException("Mã xác thực không chính xác.");
+
+        if (VerificationTokenExpiresAt < DateTime.UtcNow)
+        {
+            ClearVerificationState();
+            throw new DomainException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        }
+
+        if (VerificationToken != token)
+        {
+            EmailVerificationAttempts++;
+            if (EmailVerificationAttempts >= MaxEmailVerificationAttempts)
+            {
+                ClearVerificationState();
+                throw new DomainException("Bạn đã nhập sai mã quá số lần cho phép. Vui lòng yêu cầu gửi lại mã mới.");
+            }
+            throw new DomainException("Mã xác thực không chính xác.");
+        }
 
         var oldEmail = Email.Value;
-        Email = email;
-        EmailVerified = false;
+        Email = EmailAddress.Create(PendingEmail);
+        EmailVerified = true;
 
-        // BẢO MẬT: nếu attacker chiếm được session hiện tại và tự đổi email,
-        // phải buộc đăng xuất toàn bộ thiết bị để chủ tài khoản phát hiện bất thường.
+        ClearVerificationState();
+
         RevokeAllSessions();
         UpdateSecurityStamp();
 
-        AddDomainEvent(new UserEmailChangedEvent(Id, oldEmail, email.Value));
+        AddDomainEvent(new UserEmailChangedEvent(Id, oldEmail, Email.Value));
+    }
+
+    /// <summary>Hủy yêu cầu đổi email đang chờ xác nhận (người dùng đổi ý, hoặc Admin can thiệp).</summary>
+    public void CancelEmailChangeRequest()
+    {
+        if (string.IsNullOrWhiteSpace(PendingEmail))
+            throw new DomainException("Không có yêu cầu đổi email nào đang chờ xác nhận.");
+
+        ClearVerificationState();
     }
 
     public void RestoreAccount()
@@ -353,6 +380,7 @@ public class User : AggregateRoot<Guid>
         FullName = "Deleted User";
         Phone = null;
         ThumbnailUrl = null;
+        PendingEmail = null;
     }
 
     public void SyncRoles(IEnumerable<Guid> roleIds)
@@ -366,23 +394,18 @@ public class User : AggregateRoot<Guid>
             _userRoles.Add(new UserRole(Id, roleId));
         }
 
-        // Chỉ raise event khi tập Role thực sự thay đổi - tránh event rác khi Handler gọi
-        // SyncRoles với đúng danh sách hiện tại (no-op).
         if (!oldRoleIds.OrderBy(x => x).SequenceEqual(newRoleIds.OrderBy(x => x)))
         {
             AddDomainEvent(new UserRolesChangedEvent(Id, oldRoleIds, newRoleIds));
         }
     }
 
-    // Dành cho Admin chủ động xác thực Email khi tạo tài khoản nội bộ
     public void VerifyEmailByAdmin()
     {
         EmailVerified = true;
-        VerificationToken = null;
-        VerificationTokenExpiresAt = null;
+        ClearVerificationState();
     }
 
-    // Xóa mềm tài khoản + ngắt toàn bộ Session + đổi Security Stamp
     public void DeleteAccount()
     {
         if (IsDeleted)
@@ -392,11 +415,15 @@ public class User : AggregateRoot<Guid>
         DeletedAt = DateTime.UtcNow;
         Status = UserStatusEnum.Inactive;
 
-        // BẢO MẬT: Ngắt lập tức toàn bộ phiên làm việc của tài khoản bị xóa
         RevokeAllSessions();
         UpdateSecurityStamp();
 
         AddDomainEvent(new UserAccountDeletedEvent(Id));
+    }
+
+    public void MarkCreatedByAdmin(IEnumerable<Guid> assignedRoleIds)
+    {
+        AddDomainEvent(new UserCreatedByAdminEvent(Id, assignedRoleIds.ToList()));
     }
 
     private void SetFullName(string fullName)
@@ -405,6 +432,21 @@ public class User : AggregateRoot<Guid>
             throw new DomainException("Họ tên không hợp lệ hoặc quá dài.");
 
         FullName = fullName.Trim();
+    }
+
+    private void ClearVerificationState()
+    {
+        PendingEmail = null;
+        VerificationToken = null;
+        VerificationTokenExpiresAt = null;
+        EmailVerificationAttempts = 0;
+    }
+
+    private void ClearPasswordResetState()
+    {
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+        PasswordResetAttempts = 0;
     }
     #endregion
 
@@ -469,13 +511,11 @@ public class User : AggregateRoot<Guid>
         if (targetAddress.IsDefault)
             return;
 
-        // Gỡ cờ mặc định của các địa chỉ khác
         foreach (var address in _addresses)
         {
-            address.RemoveDefault(); // Gọi hàm RemoveDefault() đã có sẵn trong Address.cs
+            address.RemoveDefault();
         }
 
-        // Đặt địa chỉ mục tiêu làm mặc định
         targetAddress.SetAsDefault();
     }
     #endregion

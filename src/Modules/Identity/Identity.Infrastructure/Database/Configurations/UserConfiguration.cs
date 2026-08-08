@@ -13,8 +13,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(u => u.Id);
 
-        // --- Value Object Mapping ---
-        // Mapping EmailAddress Value Object thành cột string trong DB
         builder.Property(u => u.Email)
             .HasConversion(
                 email => email.Value,
@@ -27,7 +25,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique()
             .HasFilter("\"IsDeleted\" = false");
 
-        // Mapping PhoneNumber Value Object
+        // Mới: email đang chờ xác nhận OTP (mô hình 2 bước). Không cần unique constraint ở DB
+        // vì chỉ là giá trị tạm, ngắn hạn - tính duy nhất được kiểm tra ở tầng Application
+        // ngay trước khi Confirm (xem ConfirmChangeEmailCommandHandler).
+        builder.Property(u => u.PendingEmail)
+            .HasMaxLength(255);
+
         builder.Property(u => u.Phone)
             .HasConversion(
                 phone => phone != null ? phone.Value : null,
@@ -36,7 +39,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .IsRequired(false);
 
-        // --- Basic Properties ---
         builder.Property(u => u.FullName)
             .HasMaxLength(150)
             .IsRequired();
@@ -53,17 +55,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .IsRequired();
 
-        // --- Verification & Security ---
         builder.Property(u => u.VerificationToken)
             .HasMaxLength(100);
 
-        // --- Audit Properties (Từ Base AuditableEntity) ---
         builder.Property(u => u.CreatedBy).HasMaxLength(100);
         builder.Property(u => u.LastModifiedBy).HasMaxLength(100);
         builder.Property(u => u.DeletedBy).HasMaxLength(100);
 
-        // --- Relationships Configuration (Dùng Backing Fields) ---
-        // 1. Address Navigation
         builder.HasMany(u => u.Addresses)
             .WithOne()
             .HasForeignKey("UserId")
@@ -72,7 +70,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Navigation(u => u.Addresses)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        // 2. UserSession Navigation
         builder.HasMany(u => u.Sessions)
             .WithOne()
             .HasForeignKey(s => s.UserId)
@@ -81,7 +78,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Navigation(u => u.Sessions)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        // 3. UserRole Navigation
         builder.HasMany(u => u.UserRoles)
             .WithOne(ur => ur.User)
             .HasForeignKey(ur => ur.UserId)
@@ -90,7 +86,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Navigation(u => u.UserRoles)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        // Query Filter cho Soft Delete
         builder.HasQueryFilter(u => !u.IsDeleted);
     }
 }

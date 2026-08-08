@@ -45,7 +45,7 @@ public class UsersController : BaseApiController
     }
 
     [HttpPost("verify-email")]
-    public async Task<IActionResult> VerifyEmail([FromBody] Application.Features.Users.Commands.VerifyEmailCommand command)
+    public async Task<IActionResult> VerifyEmail([FromBody] ConfirmChangeEmailCommand command)
     {
         // Controller không cần phải chế biến ID nữa, Handler sẽ tự lo qua ICurrentUser
         var result = await Mediator.Send(command);
