@@ -4,16 +4,13 @@ using Shared.Application.Interfaces;
 
 namespace Identity.Application.EventHandlers;
 
-/// <summary>
-/// Bất kỳ sự kiện nào làm thay đổi SecurityStamp ở tầng Domain đều cần xoá cache tương ứng,
-/// nếu không request tiếp theo vẫn so khớp với giá trị SecurityStamp cũ đã cache (tối đa 15 phút trễ).
-/// Được publish qua Outbox -> MediatR (xem ProcessOutboxMessagesJob), độ trễ tối đa ~10s (chu kỳ poll).
-/// </summary>
 public class UserSecurityCacheInvalidationHandler :
     INotificationHandler<UserAccountLockedEvent>,
     INotificationHandler<UserPasswordResetEvent>,
+    INotificationHandler<UserPasswordChangedEvent>,
     INotificationHandler<UserAccountDeletedEvent>,
-    INotificationHandler<UserEmailChangedEvent>
+    INotificationHandler<UserEmailChangedEvent>,
+    INotificationHandler<UserRolesChangedEvent>
 {
     private readonly ISecurityCacheService _securityCacheService;
 
@@ -28,9 +25,18 @@ public class UserSecurityCacheInvalidationHandler :
     public Task Handle(UserPasswordResetEvent notification, CancellationToken cancellationToken)
         => _securityCacheService.RemoveSecurityStampAsync(notification.UserId);
 
+    public Task Handle(UserPasswordChangedEvent notification, CancellationToken cancellationToken)
+        => _securityCacheService.RemoveSecurityStampAsync(notification.UserId);
+
     public Task Handle(UserAccountDeletedEvent notification, CancellationToken cancellationToken)
         => _securityCacheService.RemoveSecurityStampAsync(notification.UserId);
 
     public Task Handle(UserEmailChangedEvent notification, CancellationToken cancellationToken)
+        => _securityCacheService.RemoveSecurityStampAsync(notification.UserId);
+
+    // Safety-net: AssignRolesToUserCommandHandler đã write-through cache trực tiếp, tương tự
+    // pattern đã áp dụng cho RolePermissionsChangedEvent - handler này là lưới an toàn nếu
+    // lệnh gọi trực tiếp thất bại vì lý do hạ tầng.
+    public Task Handle(UserRolesChangedEvent notification, CancellationToken cancellationToken)
         => _securityCacheService.RemoveSecurityStampAsync(notification.UserId);
 }

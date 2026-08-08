@@ -16,5 +16,11 @@ public interface IUserRepository
 
     Task<Guid?> GetSecurityStampAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<List<UserSession>> GetActiveSessionsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Đếm số User (chưa xóa mềm) đang giữ 1 Role cụ thể, có thể loại trừ 1 UserId khỏi phép đếm.
+    /// Dùng để kiểm tra "nếu gỡ Role này khỏi User X, còn ai khác giữ Role đó không" - chống việc
+    /// gỡ Role hệ thống (ADMIN/SUPER_ADMIN) khỏi người giữ cuối cùng.
+    /// </summary>
+    Task<int> CountUsersInRoleAsync(Guid roleId, Guid? excludeUserId = null, CancellationToken cancellationToken = default);
 
 }

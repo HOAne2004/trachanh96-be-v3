@@ -75,7 +75,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         }
 
         // 3. Kiểm tra xem mật khẩu hiện tại có đúng không
-        var isCurrentPasswordValid = _passwordHasher.Verify(user.PasswordHash, request.CurrentPassword);
+        var isCurrentPasswordValid = _passwordHasher.Verify(request.CurrentPassword, user.PasswordHash);
         if (!isCurrentPasswordValid)
         {
             // Tùy chọn: Có thể gọi user.IncreaseFailedLogin() ở đây nếu muốn siết chặt bảo mật

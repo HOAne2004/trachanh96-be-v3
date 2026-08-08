@@ -126,4 +126,12 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<int> CountUsersInRoleAsync(Guid roleId, Guid? excludeUserId = null, CancellationToken cancellationToken = default)
+    {
+        // Dựa trên _context.Users nên Global Query Filter (!IsDeleted) tự động áp dụng
+        return await _context.Users
+            .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
+            .Where(u => excludeUserId == null || u.Id != excludeUserId.Value)
+            .CountAsync(cancellationToken);
+    }
 }

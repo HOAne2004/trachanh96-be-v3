@@ -13,6 +13,8 @@ public class User : AggregateRoot<Guid>
     private const int DefaultLockoutMinutes = 15;
     private const int MaxAddressesPerUser = 5;
     private const int MaxFullNameLength = 150;
+    private const int MaxPasswordResetAttempts = 5;
+    private const int MaxEmailVerificationAttempts = 5;
     #endregion
 
     #region [ Properties ]
@@ -32,6 +34,8 @@ public class User : AggregateRoot<Guid>
     public Guid SecurityStamp { get; private set; }
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiresAt { get; private set; }
+    public int PasswordResetAttempts { get; private set; }
+    public int EmailVerificationAttempts { get; private set; }
     #endregion
 
     #region [ Navigation ]
@@ -96,6 +100,7 @@ public class User : AggregateRoot<Guid>
         if (string.IsNullOrWhiteSpace(newPasswordHash))
             throw new DomainException("PasswordHash không hợp lệ.");
         PasswordHash = newPasswordHash;
+        AddDomainEvent(new UserPasswordChangedEvent(Id));
     }
 
     public void LockAccount(DateTime lockoutEndTime)
@@ -125,6 +130,7 @@ public class User : AggregateRoot<Guid>
     {
         VerificationToken = token;
         VerificationTokenExpiresAt = DateTime.UtcNow.AddHours(expiryHours);
+        EmailVerificationAttempts = 0;
     }
 
     public void VerifyEmail(string token)
@@ -132,45 +138,91 @@ public class User : AggregateRoot<Guid>
         if (EmailVerified)
             throw new DomainException("Tài khoản này đã được xác thực từ trước.");
 
-        if (string.IsNullOrWhiteSpace(VerificationToken) || VerificationToken != token)
+        if (string.IsNullOrWhiteSpace(VerificationToken))
             throw new DomainException("Mã xác thực không chính xác.");
 
         if (VerificationTokenExpiresAt < DateTime.UtcNow)
+        {
+            VerificationToken = null;
+            VerificationTokenExpiresAt = null;
+            EmailVerificationAttempts = 0;
             throw new DomainException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        }
+
+        if (VerificationToken != token)
+        {
+            EmailVerificationAttempts++;
+            if (EmailVerificationAttempts >= MaxEmailVerificationAttempts)
+            {
+                VerificationToken = null;
+                VerificationTokenExpiresAt = null;
+                EmailVerificationAttempts = 0;
+                throw new DomainException("Bạn đã nhập sai mã quá số lần cho phép. Vui lòng yêu cầu gửi lại mã mới.");
+            }
+            throw new DomainException("Mã xác thực không chính xác.");
+        }
 
         EmailVerified = true;
         VerificationToken = null;
         VerificationTokenExpiresAt = null;
+        EmailVerificationAttempts = 0;
     }
-
     public void SetPasswordResetToken(string token, int expiryMinutes = 15)
     {
         PasswordResetToken = token;
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        PasswordResetAttempts = 0; // Reset đếm mỗi khi có token MỚI được cấp
     }
 
     public void ResetPassword(string token, string newPasswordHash)
     {
-        // 1. Kiểm tra tính hợp lệ của Token
-        if (string.IsNullOrWhiteSpace(PasswordResetToken) || PasswordResetToken != token)
+        if (string.IsNullOrWhiteSpace(PasswordResetToken))
             throw new DomainException("Mã xác thực không chính xác.");
 
         if (PasswordResetTokenExpiresAt < DateTime.UtcNow)
+        {
+            PasswordResetToken = null;
+            PasswordResetTokenExpiresAt = null;
+            PasswordResetAttempts = 0;
             throw new DomainException("Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        }
 
-        // 2. Đổi mật khẩu
+        if (PasswordResetToken != token)
+        {
+            PasswordResetAttempts++;
+            if (PasswordResetAttempts >= MaxPasswordResetAttempts)
+            {
+                PasswordResetToken = null;
+                PasswordResetTokenExpiresAt = null;
+                PasswordResetAttempts = 0;
+                throw new DomainException("Bạn đã nhập sai mã quá số lần cho phép. Vui lòng yêu cầu gửi lại mã mới.");
+            }
+            throw new DomainException("Mã xác thực không chính xác.");
+        }
+
         ChangePassword(newPasswordHash);
 
-        // 3. Xóa Token để tránh dùng lại (One-time use)
         PasswordResetToken = null;
         PasswordResetTokenExpiresAt = null;
+        PasswordResetAttempts = 0;
 
-        // 4. BẢO MẬT TỐI CAO: Khóa mõm tất cả các thiết bị đang đăng nhập!
         RevokeAllSessions();
-        UpdateSecurityStamp(); // JWT hiện tại sẽ chết ngay lập tức
-        ResetFailedLogin();    // Reset đếm sai (nếu có)
+        UpdateSecurityStamp();
+        ResetFailedLogin();
 
         AddDomainEvent(new UserPasswordResetEvent(Id));
+    }
+
+    /// <summary>
+    /// Đánh dấu Domain Event "User này được Admin tạo" kèm Role được gán ngay lúc tạo.
+    /// Không thể raise sẵn trong constructor vì User(...) constructor dùng chung cho cả
+    /// RegisterUserCommand (tự đăng ký) lẫn CreateUserByAdminCommand (Admin tạo) - cần Handler
+    /// gọi tường minh sau khi biết rõ ngữ cảnh, theo đúng convention "ByAdmin" đã có
+    /// (VerifyEmailByAdmin, AdminUpdateUser).
+    /// </summary>
+    public void MarkCreatedByAdmin(IEnumerable<Guid> assignedRoleIds)
+    {
+        AddDomainEvent(new UserCreatedByAdminEvent(Id, assignedRoleIds.ToList()));
     }
     #endregion
 
@@ -305,13 +357,20 @@ public class User : AggregateRoot<Guid>
 
     public void SyncRoles(IEnumerable<Guid> roleIds)
     {
-        // Xóa các role cũ
-        _userRoles.Clear();
+        var newRoleIds = roleIds.Distinct().ToList();
+        var oldRoleIds = _userRoles.Select(ur => ur.RoleId).ToList();
 
-        // Thêm các role mới
-        foreach (var roleId in roleIds.Distinct())
+        _userRoles.Clear();
+        foreach (var roleId in newRoleIds)
         {
             _userRoles.Add(new UserRole(Id, roleId));
+        }
+
+        // Chỉ raise event khi tập Role thực sự thay đổi - tránh event rác khi Handler gọi
+        // SyncRoles với đúng danh sách hiện tại (no-op).
+        if (!oldRoleIds.OrderBy(x => x).SequenceEqual(newRoleIds.OrderBy(x => x)))
+        {
+            AddDomainEvent(new UserRolesChangedEvent(Id, oldRoleIds, newRoleIds));
         }
     }
 

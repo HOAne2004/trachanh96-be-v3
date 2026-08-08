@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Identity.Application.Common;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Interfaces;
@@ -25,12 +26,6 @@ public class UpdateRolePermissionsCommandHandler : IRequestHandler<UpdateRolePer
     private readonly IIdentityUnitOfWork _unitOfWork;
     private readonly ISecurityCacheService _securityCacheService;
 
-    private static readonly HashSet<string> SystemProtectedRoles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "ADMIN",
-        "SUPER_ADMIN"
-    };
-
     public UpdateRolePermissionsCommandHandler(
         IRoleRepository roleRepository,
         IPermissionRepository permissionRepository,
@@ -48,7 +43,9 @@ public class UpdateRolePermissionsCommandHandler : IRequestHandler<UpdateRolePer
         var role = await _roleRepository.GetByIdWithPermissionsAsync(request.RoleId, cancellationToken);
         if (role == null) return Result<bool>.Failure("Không tìm thấy Vai trò (Role).");
 
-        if (SystemProtectedRoles.Contains(role.NormalizedName) || SystemProtectedRoles.Contains(role.Name))
+        // Đoạn kiểm tra ProtectedRoleNames đặt ĐÚNG VỊ TRÍ: bên trong Handle, thay thế
+        // hoàn toàn cho HashSet SystemProtectedRoles cục bộ trước đây (đã xóa).
+        if (ProtectedRoleNames.Names.Contains(role.NormalizedName))
         {
             return Result<bool>.Failure($"Không thể chỉnh sửa ma trận phân quyền của Vai trò hệ thống '{role.Name}'.");
         }
