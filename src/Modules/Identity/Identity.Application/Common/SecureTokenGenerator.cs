@@ -11,6 +11,7 @@ public static class SecureTokenGenerator
 {
     // Bỏ ký tự dễ nhầm khi đọc bằng mắt: 0/O, 1/I/L
     private const string Alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+    private const string DigitAlphabet = "0123456789";
 
     /// <summary>Mã ngắn, dễ đọc/gõ tay - dùng cho OTP reset password gửi qua email.</summary>
     public static string GenerateReadableCode(int length)
@@ -23,6 +24,24 @@ public static class SecureTokenGenerator
         for (int i = 0; i < length; i++)
         {
             chars[i] = Alphabet[bytes[i] % Alphabet.Length];
+        }
+        return new string(chars);
+    }
+
+    /// <summary>
+    /// Mã OTP thuần chữ số (0-9), dùng cho các email/SMS đã cam kết định dạng "N chữ số"
+    /// với người dùng (VD: ResetPassword.cshtml ghi rõ "mã OTP gồm 6 chữ số").
+    /// </summary>
+    public static string GenerateNumericCode(int length)
+    {
+        var bytes = new byte[length];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(bytes);
+
+        var chars = new char[length];
+        for (int i = 0; i < length; i++)
+        {
+            chars[i] = DigitAlphabet[bytes[i] % 10];
         }
         return new string(chars);
     }

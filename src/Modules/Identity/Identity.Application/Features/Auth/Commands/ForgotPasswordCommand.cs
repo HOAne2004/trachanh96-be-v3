@@ -52,7 +52,7 @@ namespace Identity.Application.Features.Auth.Commands
             }
 
             // Dùng CSPRNG thay vì Guid.NewGuid() - nhất quán với JwtProvider.GenerateRefreshToken()
-            var resetToken = SecureTokenGenerator.GenerateReadableCode(8);
+            var resetToken = SecureTokenGenerator.GenerateNumericCode(6);
 
             user.SetPasswordResetToken(resetToken, expiryMinutes: 15);
 
