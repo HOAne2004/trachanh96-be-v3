@@ -28,9 +28,8 @@ public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileComm
             .NotEmpty().WithMessage("Họ tên không được để trống.")
             .MaximumLength(150).WithMessage("Họ tên không được vượt quá 150 ký tự.");
 
-        // Chỉ validate format nếu người dùng có nhập số điện thoại
         RuleFor(x => x.PhoneNumber)
-            .Matches(@"^(0[3|5|7|8|9])+([0-9]{8})$").WithMessage("Số điện thoại không đúng định dạng VN.")
+            .Matches(@"^0[35789][0-9]{8}$").WithMessage("Số điện thoại không đúng định dạng VN.")
             .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
     }
 }
