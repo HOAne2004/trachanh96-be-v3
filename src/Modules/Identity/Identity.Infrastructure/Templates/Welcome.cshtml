@@ -1,0 +1,47 @@
+@model Shared.Application.DTOs.Email.WelcomeSetPasswordEmailModel
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+        .header { text-align: center; background-color: #3C7363; padding: 10px; color: white; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; }
+        .btn-magic-link {
+            display: inline-block;
+            padding: 14px 28px;
+            background-color: #3C7363;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .footer { margin-top: 20px; font-size: 12px; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chào mừng bạn!</h1>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong>@Model.Username</strong>,</p>
+            <p>Tài khoản của bạn tại <strong>@Model.CompanyName</strong> đã được quản trị viên tạo với email <strong>@Model.Email</strong>.</p>
+            <p>Để bắt đầu sử dụng, vui lòng thiết lập mật khẩu đăng nhập của riêng bạn bằng cách nhấn vào nút bên dưới:</p>
+
+            <div style="text-align: center;">
+                <a href="@Model.FrontendUrl/set-password?email=@Model.Email&token=@Model.Token" class="btn-magic-link">Thiết lập mật khẩu</a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px;">Liên kết này có hiệu lực trong vòng 7 ngày. Nếu bạn không yêu cầu tạo tài khoản này, vui lòng bỏ qua email.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+            <p>Trân trọng,<br />Đội ngũ @Model.CompanyName</p>
+        </div>
+        <div class="footer">
+            <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+        </div>
+    </div>
+</body>
+</html>

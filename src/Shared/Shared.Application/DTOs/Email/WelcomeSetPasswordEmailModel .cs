@@ -1,6 +1,6 @@
 ﻿namespace Shared.Application.DTOs.Email;
 
-public class VerifyEmailModel : IEmailModel
+public class WelcomeSetPasswordEmailModel : IEmailModel
 {
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
