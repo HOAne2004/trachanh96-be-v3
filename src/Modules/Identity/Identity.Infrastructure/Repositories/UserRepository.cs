@@ -59,7 +59,10 @@ public class UserRepository : IUserRepository
     public async Task<(IEnumerable<User> Users, int TotalCount)> GetPaginatedAsync(
         int pageIndex, int pageSize, string? searchTerm, Guid? roleId, string? status, CancellationToken cancellationToken)
     {
-        var query = _context.Users.AsNoTracking().AsQueryable();
+        var query = _context.Users
+            .Include(u => u.UserRoles)
+            .AsNoTracking()
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -133,5 +136,13 @@ public class UserRepository : IUserRepository
             .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
             .Where(u => excludeUserId == null || u.Id != excludeUserId.Value)
             .CountAsync(cancellationToken);
+    }
+
+    public async Task<User?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Include(u => u.UserRoles)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
 }

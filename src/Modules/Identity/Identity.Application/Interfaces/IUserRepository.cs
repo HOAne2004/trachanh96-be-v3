@@ -23,4 +23,9 @@ public interface IUserRepository
     /// </summary>
     Task<int> CountUsersInRoleAsync(Guid roleId, Guid? excludeUserId = null, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Tải User kèm UserRoles cho mục đích hiển thị Profile - KHÔNG Include Addresses/Sessions
+    /// (không cần thiết cho màn hình profile), giảm 2 JOIN không cần thiết so với GetByIdAsync.
+    /// </summary>
+    Task<User?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken = default);
 }
