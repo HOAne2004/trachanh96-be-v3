@@ -1,24 +1,19 @@
 ﻿using FluentValidation;
+using Identity.Application.Common;
 using Identity.Application.Interfaces;
+using Identity.Domain.Entities;
 using MediatR;
 using Shared.Application.Models;
 using Shared.Domain.Exceptions;
 
 namespace Identity.Application.Features.Roles.Commands;
 
-// ==========================================================
-// 1. THE COMMAND
-// Truyền Id của Role trên URL và Payload chứa thông tin mới
-// ==========================================================
 public record UpdateRoleCommand(
     Guid RoleId,
     string Name,
     string? Description
 ) : IRequest<Result<string>>;
 
-// ==========================================================
-// 2. THE VALIDATOR
-// ==========================================================
 public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
 {
     public UpdateRoleCommandValidator()
@@ -36,9 +31,6 @@ public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
     }
 }
 
-// ==========================================================
-// 3. THE HANDLER
-// ==========================================================
 public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Result<string>>
 {
     private readonly IRoleRepository _roleRepository;
@@ -54,14 +46,24 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Resul
 
     public async Task<Result<string>> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
-        // 1. Tìm Role trong CSDL
         var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role == null)
         {
             return Result<string>.Failure("Không tìm thấy Vai trò (Role) cần cập nhật.");
         }
 
-        // 2. Kiểm tra tên mới có bị trùng với một Role KHÁC trong hệ thống không
+        // CHẶN ĐỔI TÊN Role hệ thống: hệ thống tra cứu các Role này bằng NormalizedName ở nơi
+        // khác (VD: RegisterUserCommand tra "CUSTOMER") - đổi tên sẽ làm gãy chức năng liên quan
+        // ÂM THẦM, không có exception nào cảnh báo tại thời điểm gãy. Vẫn cho phép sửa Description.
+        if (SystemReservedRoleNames.Names.Contains(role.NormalizedName))
+        {
+            var newNormalizedName = Role.NormalizeName(request.Name);
+            if (newNormalizedName != role.NormalizedName)
+            {
+                return Result<string>.Failure($"Không thể đổi tên Vai trò hệ thống '{role.Name}'. Bạn vẫn có thể cập nhật Mô tả.");
+            }
+        }
+
         var isNameExists = await _roleRepository.IsNameExistsAsync(
             request.Name,
             excludeRoleId: request.RoleId,
@@ -74,11 +76,9 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Resul
 
         try
         {
-            // 3. Gọi các Domain Behavior trong Entity Role
             role.Rename(request.Name);
             role.ChangeDescription(request.Description);
 
-            // 4. Lưu thay đổi xuống Database
             await _roleRepository.UpdateAsync(role, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

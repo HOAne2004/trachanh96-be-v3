@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Identity.Application.Common;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
@@ -6,15 +7,8 @@ using Shared.Domain.Exceptions;
 
 namespace Identity.Application.Features.Roles.Commands;
 
-// ==========================================================
-// 1. THE COMMAND
-// Truyền ID của Role cần xóa
-// ==========================================================
 public record DeleteRoleCommand(Guid RoleId) : IRequest<Result<string>>;
 
-// ==========================================================
-// 2. THE VALIDATOR
-// ==========================================================
 public class DeleteRoleCommandValidator : AbstractValidator<DeleteRoleCommand>
 {
     public DeleteRoleCommandValidator()
@@ -24,21 +18,10 @@ public class DeleteRoleCommandValidator : AbstractValidator<DeleteRoleCommand>
     }
 }
 
-// ==========================================================
-// 3. THE HANDLER
-// ==========================================================
 public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Result<string>>
 {
     private readonly IRoleRepository _roleRepository;
     private readonly IIdentityUnitOfWork _unitOfWork;
-
-    // Danh sách các Role hệ thống bảo vệ nghiêm ngặt (viết hoa chuẩn hóa)
-    private static readonly HashSet<string> SystemProtectedRoles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "ADMIN",
-        "SUPER_ADMIN",
-        "CUSTOMER"
-    };
 
     public DeleteRoleCommandHandler(
         IRoleRepository roleRepository,
@@ -50,20 +33,19 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Resul
 
     public async Task<Result<string>> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
     {
-        // 1. Tìm Role trong Database
         var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role == null)
         {
             return Result<string>.Failure("Không tìm thấy Vai trò (Role) cần xóa.");
         }
 
-        // 2. BẢO MẬT: Kiểm tra xem có phải Role cốt lõi của hệ thống không
-        if (SystemProtectedRoles.Contains(role.NormalizedName) || SystemProtectedRoles.Contains(role.Name))
+        // Chỉ so NormalizedName - đây là nguồn duy nhất đáng tin cậy (Name thô không được
+        // chuẩn hóa nên có thể trùng khớp sai/thiếu, xem giải thích ở lượt review Role.cs).
+        if (SystemReservedRoleNames.Names.Contains(role.NormalizedName))
         {
             return Result<string>.Failure($"Không thể xóa Vai trò hệ thống '{role.Name}'. Đây là Vai trò mặc định của ứng dụng.");
         }
 
-        // 3. RÀNG BUỘC TOÀN VẸN: Kiểm tra xem Role có đang được gán cho User nào không
         var isRoleInUse = await _roleRepository.IsRoleInUseAsync(role.Id, cancellationToken);
         if (isRoleInUse)
         {
@@ -72,10 +54,7 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Resul
 
         try
         {
-            // 4. Xóa khỏi Repository
             _roleRepository.Delete(role);
-
-            // 5. Commit Transaction xuống Database
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result<string>.Success($"Đã xóa Vai trò '{role.Name}' thành công.");

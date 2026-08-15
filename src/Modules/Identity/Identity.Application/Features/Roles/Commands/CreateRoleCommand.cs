@@ -51,19 +51,25 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Resul
             return Result<Guid>.Failure($"Tên Vai trò '{request.Name}' đã tồn tại trong hệ thống.");
         }
 
+        var distinctCodes = request.PermissionCodes?.Distinct().ToList() ?? new List<string>();
+        var validPermissions = new List<Permission>();
+
+        if (distinctCodes.Any())
+        {
+            validPermissions = (await _permissionRepository.GetByCodesAsync(distinctCodes, cancellationToken)).ToList();
+            if (validPermissions.Count != distinctCodes.Count)
+            {
+                return Result<Guid>.Failure("Có một hoặc nhiều mã Quyền (Permission) không hợp lệ.");
+            }
+        }
+
         try
         {
             var newRole = new Role(request.Name, request.Description);
 
-            if (request.PermissionCodes != null && request.PermissionCodes.Any())
+            foreach (var permission in validPermissions)
             {
-                var distinctCodes = request.PermissionCodes.Distinct().ToList();
-                var validPermissions = await _permissionRepository.GetByCodesAsync(distinctCodes, cancellationToken);
-
-                foreach (var permission in validPermissions)
-                {
-                    newRole.AddPermission(permission);
-                }
+                newRole.AddPermission(permission);
             }
 
             _roleRepository.Add(newRole);
