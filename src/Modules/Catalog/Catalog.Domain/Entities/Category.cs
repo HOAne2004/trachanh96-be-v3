@@ -4,13 +4,11 @@ using Shared.Domain.ValueObjects;
 
 namespace Catalog.Domain.Entities;
 
-public class Category : AggregateRoot<int>, IAuditableEntity, ISoftDeletableEntity
+public class Category : AggregateRoot<int>
 {
     public string Name { get; private set; }
     public Slug Slug { get; private set; }
     public int? ParentId { get; private set; }
-
-    // Thuộc tính phục vụ UI / Nghiệp vụ
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; } 
 
