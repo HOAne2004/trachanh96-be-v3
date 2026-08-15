@@ -1,9 +1,8 @@
 ﻿using Identity.Application.Features.Users.Commands;
 using Identity.Application.Features.Users.Queries;
-using Identity.Domain.Constants; // Chứa IdentityPermissions
-using Microsoft.AspNetCore.Authorization;
+using Identity.Domain.Constants; 
 using Microsoft.AspNetCore.Mvc;
-using Shared.Infrastructure.Authorization; // Nếu chứa HasPermissionAttribute
+using Shared.Infrastructure.Authorization; 
 using Shared.Presentation.Controllers;
 
 namespace Identity.Presentation.Controllers;
@@ -81,7 +80,7 @@ public class AdminUsersController : BaseApiController
     }
 
     [HttpPut("{id:guid}/restore")]
-    [HasPermission(IdentityPermissions.Users.Delete)] // Tuỳ bạn thiết lập quyền Restore riêng biệt
+    [HasPermission(IdentityPermissions.Users.Restore)]
     public async Task<IActionResult> RestoreUser(Guid id)
     {
         var result = await Mediator.Send(new RestoreUserCommand(id));
