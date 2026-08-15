@@ -14,7 +14,7 @@ public class Address : AuditableEntity<Guid>
     public PhoneNumber RecipientPhone { get; private set; }
     public string AddressDetail { get; private set; }
     public string Province { get; private set; }
-    public string District { get; private set; }
+    public string? District { get; private set; }
     public string Commune { get; private set; }
 
     public string FullAddress => string.Join(", ", new[] { AddressDetail, Commune, District, Province }
@@ -35,7 +35,7 @@ public class Address : AuditableEntity<Guid>
 
     // Constructor internal: Ép buộc khởi tạo qua User
     internal Address(string recipientName, string rawPhone, string addressDetail,
-                     string province, string district, string commune,
+                     string province, string? district, string commune,
                      double? latitude, double? longitude, bool isDefault)
     {
         Id = Guid.CreateVersion7();
@@ -47,7 +47,7 @@ public class Address : AuditableEntity<Guid>
                    nameof(AddressDetail), nameof(Province),
                    nameof(District), nameof(Commune))]
     internal void Update(string recipientName, string rawPhone, string addressDetail,
-                         string province, string district, string commune,
+                         string province, string? district, string commune,
                          double? latitude, double? longitude)
     {
         if (string.IsNullOrWhiteSpace(recipientName) || recipientName.Length > 150)

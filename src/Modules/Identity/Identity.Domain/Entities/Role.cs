@@ -1,6 +1,7 @@
 ﻿using Identity.Domain.Events;
 using Shared.Domain.Exceptions;
 using Shared.Domain.SeedWork;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -54,6 +55,7 @@ public class Role : AuditableEntity<Guid>
     // PRIVATE HELPERS
     // ==========================================
 
+    [MemberNotNull(nameof(Name), nameof(NormalizedName))]
     private void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Identity.Application.DTOs.Request;
+using Identity.Application.DTOs.Response;
 using Identity.Application.Interfaces;
 using MediatR;
 using Shared.Application.Models;
