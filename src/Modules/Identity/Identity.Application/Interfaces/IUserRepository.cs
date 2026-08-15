@@ -28,4 +28,17 @@ public interface IUserRepository
     /// (không cần thiết cho màn hình profile), giảm 2 JOIN không cần thiết so với GetByIdAsync.
     /// </summary>
     Task<User?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Đọc toàn bộ Address của 1 User trực tiếp từ bảng Addresses, không tải qua User Aggregate
+    /// (không cần Sessions/UserRoles cho mục đích hiển thị sổ địa chỉ).
+    /// </summary>
+    Task<List<Address>> GetAddressesByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Đọc 1 Address cụ thể, kèm điều kiện thuộc đúng userId ngay trong câu SQL - vừa tối ưu
+    /// (không tải cả sổ địa chỉ chỉ để lấy 1 cái), vừa là một lớp chống IDOR bổ sung ở tầng
+    /// truy vấn (dù logic hiện tại qua User Aggregate cũng đã an toàn).
+    /// </summary>
+    Task<Address?> GetAddressByIdForUserAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default);
 }

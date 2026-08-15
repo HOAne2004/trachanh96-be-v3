@@ -145,4 +145,19 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
+
+    public async Task<List<Address>> GetAddressesByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Addresses
+            .AsNoTracking()
+            .Where(a => EF.Property<Guid>(a, "UserId") == userId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Address?> GetAddressByIdForUserAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Addresses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == addressId && EF.Property<Guid>(a, "UserId") == userId, cancellationToken);
+    }
 }
