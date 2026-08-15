@@ -5,26 +5,17 @@ using Shared.Application.Models;
 
 namespace Identity.Application.Features.Roles.Queries;
 
-// ==========================================================
-// 1. DTO DETAIL CHO MÀN HÌNH CHỈNH SỬA PHÂN QUYỀN
-// ==========================================================
 public record RoleDetailsAdminDto(
     Guid Id,
     string Name,
     string NormalizedName,
     string? Description,
-    List<string> PermissionCodes, // Danh sách các mã quyền (VD: ["Identity.Users.View", "Catalog.Products.Create"])
+    IReadOnlyList<string> PermissionCodes,
     DateTime CreatedAt
 );
 
-// ==========================================================
-// 2. THE QUERY
-// ==========================================================
 public record GetRoleByIdQuery(Guid RoleId) : IRequest<Result<RoleDetailsAdminDto>>;
 
-// ==========================================================
-// 3. THE VALIDATOR
-// ==========================================================
 public class GetRoleByIdQueryValidator : AbstractValidator<GetRoleByIdQuery>
 {
     public GetRoleByIdQueryValidator()
@@ -34,9 +25,6 @@ public class GetRoleByIdQueryValidator : AbstractValidator<GetRoleByIdQuery>
     }
 }
 
-// ==========================================================
-// 4. THE HANDLER
-// ==========================================================
 public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, Result<RoleDetailsAdminDto>>
 {
     private readonly IRoleRepository _roleRepository;
@@ -48,8 +36,7 @@ public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, Result<
 
     public async Task<Result<RoleDetailsAdminDto>> Handle(GetRoleByIdQuery request, CancellationToken cancellationToken)
     {
-        // Gọi hàm GetByIdWithPermissionsAsync để Include sẵn bảng trung gian RolePermissions
-        var role = await _roleRepository.GetByIdWithPermissionsAsync(request.RoleId, cancellationToken);
+        var role = await _roleRepository.GetByIdWithPermissionsReadOnlyAsync(request.RoleId, cancellationToken);
 
         if (role == null)
         {

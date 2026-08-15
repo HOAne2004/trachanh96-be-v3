@@ -22,4 +22,11 @@ public interface IRoleRepository
         int pageSize,
         string? searchTerm,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bản chỉ-đọc của GetByIdWithPermissionsAsync - dùng AsNoTracking() vì mục đích chỉ hiển thị,
+    /// không bao giờ SaveChanges. GetByIdWithPermissionsAsync (có tracking) vẫn giữ nguyên,
+    /// bắt buộc cho UpdateRolePermissionsCommand cần Change Tracker phát hiện AddPermission/RemovePermission.
+    /// </summary>
+    Task<Role?> GetByIdWithPermissionsReadOnlyAsync(Guid roleId, CancellationToken cancellationToken = default);
 }

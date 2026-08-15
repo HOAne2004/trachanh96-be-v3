@@ -113,4 +113,12 @@ public class RoleRepository : IRoleRepository
 
         return (roles, totalCount);
     }
+
+    public async Task<Role?> GetByIdWithPermissionsReadOnlyAsync(Guid roleId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Roles
+            .Include(r => r.RolePermissions)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
+    }
 }
