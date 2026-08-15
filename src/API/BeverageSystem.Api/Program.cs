@@ -9,6 +9,9 @@ using Orders.Infrastructure;
 using Payments.Infrastructure;
 using Payments.Application;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Stores.Application;
 using Orders.Application;
 using AI.Infrastructure;
@@ -20,41 +23,64 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Dạy ASP.NET Core cách đọc/ghi Enum bằng chữ thay vì số trên toàn hệ thống
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    }); 
+    });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerConfig(); // Gọi từ Extension
-builder.Services.AddJwtAuthentication(builder.Configuration); // Gọi từ Extension
+builder.Services.AddSwaggerConfig();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddExceptionHandler<BeverageSystem.Api.Middlewares.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// Đăng ký Shared Infrastructure (Email, Interceptors...)
+// Đọc đúng IP/Scheme thật của client khi chạy sau reverse proxy (nginx trong Docker).
+// KnownNetworks CẦN cập nhật đúng subnet của Docker network nội bộ khi triển khai thật -
+// để trống tạm thời trong giai đoạn dev (chưa có docker-compose), NHƯNG bắt buộc phải khai báo
+// đúng trước khi lên Production, nếu không ai cũng có thể giả mạo IP qua header X-Forwarded-For.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // TODO: sau khi có docker-compose, thêm dòng dưới với đúng subnet của network nginx<->api:
+    // options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("172.28.0.0"), 16));
+});
+
+// Rate Limiting cho nhóm endpoint không cần đăng nhập (login, register, forgot-password...) -
+// chống brute-force/spam ở tầng HTTP, bổ sung cho cơ chế giới hạn thử sai đã có ở tầng Domain
+// (MaxFailedLoginAttempts, MaxPasswordResetAttempts...) vốn chỉ chặn ĐƯỢC SAU KHI request đã
+// tới được Handler - Rate Limiting chặn TRƯỚC khi request tốn tài nguyên xử lý.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4,
+                QueueLimit = 0
+            }));
+});
+
 builder.Services.AddSharedInfrastructure(builder.Configuration);
 builder.Services.AddSharedApplication();
 
 // 2. ĐĂNG KÝ CÁC MODULES
-// -- AI Module ---
 builder.Services.AddAIApplication();
 builder.Services.AddAIInfrastructure(builder.Configuration);
 
-// --- Identity Module (User, Role, Auth) ---
 builder.Services.AddIdentityModule(builder.Configuration);
 
-// --- Catalog Module ---
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCatalogApplication();
 
-//---Stores Module ---
 builder.Services.AddStoreInfrastructure(builder.Configuration);
 builder.Services.AddStoresApplication();
 
-// ---Orders Module ---
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddOrdersApplication();
 
-// --- Payments Module ---
 builder.Services.AddPaymentsInfrastructure(builder.Configuration);
 builder.Services.AddPaymentsApplication();
 
@@ -67,11 +93,14 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // Quan trọng nếu sau này dùng Cookie
+              .AllowCredentials();
     });
 });
 
 var app = builder.Build();
+
+// Đặt NGAY ĐẦU pipeline, trước mọi middleware khác đọc IP/Scheme.
+app.UseForwardedHeaders();
 
 app.UseExceptionHandler();
 
@@ -89,6 +118,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -96,12 +127,8 @@ app.MapControllers();
 
 try
 {
-    // Gọi hàm Seed Data thẳng từ app.Services
     await app.Services.SeedCatalogDataAsync();
-
-    // Sau này có module khác thì chỉ việc gọi tiếp:
     // await app.Services.SeedIdentityDataAsync();
-    // await app.Services.SeedCartDataAsync();
 }
 catch (Exception ex)
 {
