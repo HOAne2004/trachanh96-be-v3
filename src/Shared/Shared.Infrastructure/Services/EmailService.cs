@@ -85,6 +85,21 @@ public class EmailService : IEmailService
         );
     }
 
+    public Task SendAccountLockedEmailAsync(string toEmail, string username, string reason, DateTime lockoutEnd)
+    {
+        return SendEmailAsync(
+            toEmail,
+            subject: $"Thông báo khóa tài khoản - {_companyName}",
+            templateName: "AccountLocked.cshtml",
+            model: new AccountLockedEmailModel
+            {
+                Username = username,
+                Reason = reason,
+                LockoutEnd = lockoutEnd,
+                CompanyName = _companyName
+            }
+        );
+    }
     private async Task SendEmailAsync<TModel>(string toEmail, string subject, string templateName, TModel model)
     {
         try

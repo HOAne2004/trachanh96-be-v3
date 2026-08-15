@@ -8,7 +8,7 @@ using Shared.Domain.Exceptions;
 
 namespace Identity.Application.Features.Users.Commands;
 
-public record LockUserCommand(Guid TargetUserId, int LockoutDays) : IRequest<Result<string>>;
+public record LockUserCommand(Guid TargetUserId, int LockoutDays, string? Reason) : IRequest<Result<string>>;
 
 public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
 {
@@ -55,10 +55,11 @@ public class LockUserCommandHandler : IRequestHandler<LockUserCommand, Result<st
         try
         {
             var lockoutEndTime = DateTime.UtcNow.AddDays(request.LockoutDays);
+            var reason = string.IsNullOrWhiteSpace(request.Reason) ? "Vi phạm chính sách sử dụng dịch vụ." : request.Reason;
 
             // LockAccount (Domain) đã tự gọi RevokeAllSessions() + UpdateSecurityStamp() bên trong
             // (đã bổ sung ở lượt review trước) - KHÔNG gọi UpdateSecurityStamp() lần nữa ở đây.
-            user.LockAccount(lockoutEndTime);
+            user.LockAccount(lockoutEndTime, reason);
 
             await _userRepository.UpdateAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -3,6 +3,7 @@ using Identity.Domain.Events;
 using Identity.Domain.ValueObjects;
 using Shared.Domain.Exceptions;
 using Shared.Domain.SeedWork;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Identity.Domain.Entities;
 
@@ -82,7 +83,7 @@ public class User : AggregateRoot<Guid>
             LockoutEnd = DateTime.UtcNow.AddMinutes(DefaultLockoutMinutes);
             RevokeAllSessions();
             UpdateSecurityStamp();
-            AddDomainEvent(new UserAccountLockedEvent(Id, LockoutEnd.Value));
+            AddDomainEvent(new UserAccountLockedEvent(Id, LockoutEnd.Value, "Đăng nhập sai quá số lần cho phép."));
         }
     }
 
@@ -106,16 +107,19 @@ public class User : AggregateRoot<Guid>
         AddDomainEvent(new UserPasswordChangedEvent(Id));
     }
 
-    public void LockAccount(DateTime lockoutEndTime)
+    public void LockAccount(DateTime lockoutEndTime, string reason)
     {
         if (lockoutEndTime <= DateTime.UtcNow)
             throw new DomainException("Thời gian khóa phải ở tương lai.");
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new DomainException("Lý do khóa tài khoản không được để trống.");
 
         Status = UserStatusEnum.Locked;
         LockoutEnd = lockoutEndTime;
         RevokeAllSessions();
         UpdateSecurityStamp();
-        AddDomainEvent(new UserAccountLockedEvent(Id, lockoutEndTime));
+        AddDomainEvent(new UserAccountLockedEvent(Id, lockoutEndTime, reason));
     }
 
     public void UnlockAccount()
@@ -426,6 +430,7 @@ public class User : AggregateRoot<Guid>
         AddDomainEvent(new UserCreatedByAdminEvent(Id, assignedRoleIds.ToList()));
     }
 
+    [MemberNotNull(nameof(FullName))]
     private void SetFullName(string fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > MaxFullNameLength)
@@ -451,7 +456,7 @@ public class User : AggregateRoot<Guid>
     #endregion
 
     #region [ Address Behaviors ]
-    public Address AddAddress(string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
+    public Address AddAddress(string name, string rawPhone, string detail, string province, string? district, string commune, double? lat, double? lng, bool isDefault)
     {
         if (_addresses.Count >= MaxAddressesPerUser)
             throw new DomainException($"Không thể thêm quá {MaxAddressesPerUser} địa chỉ.");
@@ -471,7 +476,7 @@ public class User : AggregateRoot<Guid>
         return address;
     }
 
-    public void UpdateAddress(Guid addressId, string name, string rawPhone, string detail, string province, string district, string commune, double? lat, double? lng, bool isDefault)
+    public void UpdateAddress(Guid addressId, string name, string rawPhone, string detail, string province, string? district, string commune, double? lat, double? lng, bool isDefault)
     {
         var address = _addresses.FirstOrDefault(a => a.Id == addressId)
             ?? throw new DomainException("Không tìm thấy địa chỉ hợp lệ.");

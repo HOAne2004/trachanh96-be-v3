@@ -1,0 +1,16 @@
+﻿using static System.Net.Mime.MediaTypeNames;
+
+@model Shared.Application.DTOs.Email.AccountLockedEmailModel
+<div style = "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;" >
+    < div style="background-color: #ef4444; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h2 style="color: white; margin: 0;">Tài Khoản Đã Bị Khóa</h2>
+    </div>
+    <div style="padding: 20px; background-color: #f9fafb;">
+        <p>Xin chào <strong>@Model.Username</strong>,</p>
+        <p>Tài khoản của bạn tại <strong>@Model.CompanyName</strong> đã bị tạm khóa.</p>
+        <p><strong>Lý do:</ strong > @Model.Reason </ p >
+        < p >< strong > Thời gian mở khóa dự kiến:</ strong > @Model.LockoutEnd.ToString("dd/MM/yyyy HH:mm") </ p >
+        < p > Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ.</p>
+        <p>Trân trọng,<br />Đội ngũ @Model.CompanyName</p>
+    </div>
+</div>

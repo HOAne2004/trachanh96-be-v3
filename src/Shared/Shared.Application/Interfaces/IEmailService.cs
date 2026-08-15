@@ -11,4 +11,5 @@ public interface IEmailService
     /// vì token này không do người dùng chủ động yêu cầu nên không cần dễ đọc/gõ.
     /// </summary>
     Task SendWelcomeSetPasswordEmailAsync(string toEmail, string username, string token);
+    Task SendAccountLockedEmailAsync(string toEmail, string username, string reason, DateTime lockoutEnd);
 }
