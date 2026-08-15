@@ -1,5 +1,5 @@
 ﻿
-namespace Identity.Application.DTOs.Request
+namespace Identity.Application.DTOs.Response
 {
     public record AddressDto(
         Guid Id,
@@ -8,7 +8,7 @@ namespace Identity.Application.DTOs.Request
         string FullAddress,
         string AddressDetail,
         string Province,
-        string District,
+        string? District,
         string Commune,
         double? Latitude,
         double? Longitude,
