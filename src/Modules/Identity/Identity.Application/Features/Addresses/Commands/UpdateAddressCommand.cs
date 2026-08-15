@@ -13,7 +13,7 @@ public record UpdateAddressCommand(
     string PhoneNumber,
     string AddressDetail,
     string Province,
-    string District,
+    string? District,
     string Commune,
     double? Latitude,
     double? Longitude,
@@ -24,13 +24,24 @@ public class UpdateAddressCommandValidator : AbstractValidator<UpdateAddressComm
 {
     public UpdateAddressCommandValidator()
     {
-        RuleFor(x => x.AddressId).NotEmpty();
-        RuleFor(x => x.RecipientName).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.PhoneNumber).NotEmpty().Matches(@"^(0[3|5|7|8|9])+([0-9]{8})$");
-        RuleFor(x => x.AddressDetail).NotEmpty().MaximumLength(300);
-        RuleFor(x => x.Province).NotEmpty();
-        RuleFor(x => x.District).NotEmpty();
-        RuleFor(x => x.Commune).NotEmpty();
+        RuleFor(x => x.AddressId)
+            .NotEmpty()
+            .WithMessage("ID địa chỉ không được để trống.");
+
+        RuleFor(x => x.RecipientName)
+            .NotEmpty()
+            .WithMessage("Tên người nhận không được để trống.")
+            .MaximumLength(150);
+        
+        RuleFor(x => x.PhoneNumber)
+                    .Matches(@"^0[35789][0-9]{8}$").WithMessage("Số điện thoại không đúng định dạng VN.")
+                    .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+        RuleFor(x => x.AddressDetail).NotEmpty().WithMessage("Địa chỉ chi tiết không được để trống.").MaximumLength(300);
+        RuleFor(x => x.Province).NotEmpty().WithMessage("Tỉnh/Thành phố không được để trống.");
+        RuleFor(x => x.Commune).NotEmpty().WithMessage("Phường/Xã không được để trống.");
+        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).WithMessage("Vĩ độ không hợp lệ.").When(x => x.Latitude.HasValue);
+        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).WithMessage("Kinh độ không hợp lệ.").When(x => x.Longitude.HasValue);
     }
 }
 
