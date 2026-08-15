@@ -1,9 +1,8 @@
 ﻿using Identity.Domain.Entities;
-using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Shared.Application.Authorization;
 
-namespace Identity.Infrastructure.Persistence.Seeders;
+namespace Identity.Infrastructure.Database.Seeders;
 
 public static class IdentityDataSeeder
 {

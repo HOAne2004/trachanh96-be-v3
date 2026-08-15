@@ -10,6 +10,7 @@ public static class IdentityPermissions
         public const string Update = "Identity.Users.Update";   // Sửa thông tin user
         public const string Delete = "Identity.Users.Delete";   // Xóa mềm user
         public const string Lock = "Identity.Users.Lock";       // Khóa/Mở khóa tài khoản
+        public const string Restore = "Identity.Users.Restore";
 
         // Cấp Role cho User (Ví dụ: Thăng cấp 1 user thành Staff)
         public const string AssignRole = "Identity.Users.AssignRole";
