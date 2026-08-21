@@ -12,6 +12,12 @@ namespace Identity.Infrastructure.Database.Configurations
 
             builder.HasKey(s => s.Id);
 
+            builder.Property(s => s.Id).ValueGeneratedNever(); // Id do Domain tự sinh (Guid.CreateVersion7),
+                                                               // không phải do DB - bắt buộc khai báo tường minh
+                                                               // để EF Core không hiểu nhầm entity mới là "đã tồn tại"
+                                                               // khi nó được phát hiện qua collection navigation
+                                                               // (AddSession) thay vì gọi Add() trực tiếp.
+
             builder.Property(s => s.RefreshTokenHash)
                 .HasMaxLength(500)
                 .IsRequired();

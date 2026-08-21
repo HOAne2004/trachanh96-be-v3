@@ -12,6 +12,10 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
         builder.ToTable("Addresses");
 
         builder.HasKey(a => a.Id);
+        
+        builder.Property(a => a.Id).ValueGeneratedNever(); // Cùng lý do như UserSession - Address được thêm
+                                                           // qua user.AddAddress() (collection navigation),
+                                                           // không phải Add() trực tiếp trên DbContext.
 
         builder.Property(a => a.RecipientName)
             .HasMaxLength(150)

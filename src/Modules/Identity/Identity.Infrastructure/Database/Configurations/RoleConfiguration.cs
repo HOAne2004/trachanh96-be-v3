@@ -11,6 +11,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.ToTable("Roles");
 
         builder.HasKey(r => r.Id);
+        builder.Property(u => u.Id).ValueGeneratedNever();
 
         builder.Property(r => r.Name)
             .HasMaxLength(50)
