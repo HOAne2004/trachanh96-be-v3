@@ -1,20 +1,18 @@
 ﻿using FluentValidation;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Events;
 using MediatR;
 using Shared.Application.Models;
-using Shared.Application.Interfaces;
 
 namespace Identity.Application.Features.Auth.Commands;
 
-// 1. Command (Trả về Guid là Id của User)
 public record RegisterUserCommand(
     string Email,
     string FullName,
     string Password
 ) : IRequest<Result<Guid>>;
 
-// 2. Validator
 public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {
     public RegisterUserCommandValidator()
@@ -35,76 +33,58 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
     }
 }
 
-// 3. Handler
 public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<Guid>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IRoleRepository _roleRepository; 
+    private readonly IRoleRepository _roleRepository;
     private readonly IIdentityUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IEmailService _emailService;
 
     public RegisterUserCommandHandler(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IIdentityUnitOfWork unitOfWork,
-        IPasswordHasher passwordHasher,
-        IEmailService emailService)
+        IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
-        _emailService = emailService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        // 1. Kiểm tra Email trùng lặp
         var emailExists = await _userRepository.IsEmailExistsAsync(request.Email, cancellationToken);
         if (emailExists)
         {
             return Result<Guid>.Failure("Email này đã được đăng ký trong hệ thống.");
         }
 
-        // 2. Mã hóa mật khẩu
         var hashedPassword = _passwordHasher.Hash(request.Password);
 
-        // 3. Khởi tạo Domain Entity
         var newUser = new User(
             email: request.Email,
             fullName: request.FullName,
             passwordHash: hashedPassword
         );
 
-        // 4. Gán Role mặc định "CUSTOMER"
-        // (Yêu cầu IRoleRepository phải có hàm GetByNormalizedNameAsync)
         var customerRole = await _roleRepository.GetByNormalizedNameAsync("CUSTOMER", cancellationToken);
         if (customerRole != null)
         {
             newUser.AssignRole(customerRole.Id);
         }
 
-        // 5. Sinh mã xác thực (Ví dụ dùng Guid N hoặc tạo OTP 6 số tùy UI/UX)
-        var verifyToken = Guid.NewGuid().ToString("N"); // Tạo chuỗi ngẫu nhiên không có dấu gạch ngang
+        var verifyToken = Guid.NewGuid().ToString("N");
         newUser.SetVerificationToken(verifyToken, expiryHours: 24);
 
-        // 6. Lưu vào Database (Phải lưu thành công mới được gửi Email)
+        // KHÔNG gọi IEmailService trực tiếp nữa - raise event, để ProcessOutboxMessagesJob
+        // (chạy nền, KHÔNG chặn HTTP response) xử lý gửi email. Đây là lý do trước đây
+        // Register bị timeout: SMTP có thể treo hàng chục giây/vài phút, chặn đứng response
+        // dù DB đã ghi thành công.
+        newUser.AddDomainEvent(new UserRegisteredEvent(newUser.Id, newUser.Email.Value, newUser.FullName, verifyToken));
+
         _userRepository.Add(newUser);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // 7. Gửi Email (Bất đồng bộ)
-        // Lưu ý ở Enterprise: Việc gửi Email thường được đẩy vào Message Queue (RabbitMQ)
-        // hoặc dùng Outbox Pattern để không làm chậm request. Hiện tại gọi trực tiếp là chấp nhận được.
-        try
-        {
-            await _emailService.SendVerificationEmailAsync(newUser.Email.Value, newUser.FullName, verifyToken);
-        }
-        catch (Exception)
-        {
-            // Log lại lỗi gửi email nhưng VẪN trả về Success cho User. 
-            // Họ có thể bấm nút "Gửi lại mã xác nhận" sau.
-        }
 
         return Result<Guid>.Success(newUser.Id);
     }

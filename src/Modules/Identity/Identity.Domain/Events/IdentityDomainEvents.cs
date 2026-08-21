@@ -16,3 +16,5 @@ public sealed record UserRolesChangedEvent(Guid UserId, IReadOnlyList<Guid> OldR
 public sealed record UserPasswordChangedEvent(Guid UserId) : DomainEvent;
 
 public sealed record UserCreatedByAdminEvent(Guid UserId, IReadOnlyList<Guid> RoleIds) : DomainEvent;
+
+public sealed record UserRegisteredEvent(Guid UserId, string Email, string FullName, string VerificationToken) : DomainEvent;
