@@ -173,6 +173,7 @@ public class User : AggregateRoot<Guid>
         PasswordResetToken = token;
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
         PasswordResetAttempts = 0;
+        AddDomainEvent(new PasswordResetRequestedEvent(Id, Email.Value, FullName, token));
     }
 
     public void ResetPassword(string token, string newPasswordHash)
@@ -310,6 +311,15 @@ public class User : AggregateRoot<Guid>
         VerificationToken = token;
         VerificationTokenExpiresAt = DateTime.UtcNow.AddHours(expiryHours);
         EmailVerificationAttempts = 0;
+
+        AddDomainEvent(new ChangeEmailRequestedEvent(Id, normalizedNewEmail, FullName, token));
+    }
+
+    /// <summary>Raise event gửi email mời thiết lập mật khẩu - tách riêng khỏi MarkCreatedByAdmin
+    /// (chỉ phục vụ audit log) để không lẫn 2 mục đích khác nhau vào cùng 1 event.</summary>
+    public void RequestAccountInvitationEmail(string invitationToken)
+    {
+        AddDomainEvent(new AccountInvitationRequestedEvent(Id, Email.Value, FullName, invitationToken));
     }
 
     /// <summary>

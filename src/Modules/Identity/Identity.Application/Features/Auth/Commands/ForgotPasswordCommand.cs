@@ -58,15 +58,6 @@ namespace Identity.Application.Features.Auth.Commands
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            try
-            {
-                await _emailService.SendResetPasswordEmailAsync(user.Email.Value, user.FullName, resetToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gửi email đặt lại mật khẩu thất bại cho UserId: {UserId}", user.Id);
-            }
-
             return Result<string>.Success(GenericMessage);
         }
     }

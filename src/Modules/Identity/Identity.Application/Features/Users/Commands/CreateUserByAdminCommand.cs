@@ -117,20 +117,10 @@ public class CreateUserByAdminCommandHandler : IRequestHandler<CreateUserByAdmin
             newUser.SyncRoles(roleIds);
             newUser.MarkCreatedByAdmin(roleIds);
 
+            newUser.RequestAccountInvitationEmail(invitationToken);
+
             _userRepository.Add(newUser);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // Gửi trực tiếp (không qua Outbox) để nhất quán với RegisterUserCommand/ForgotPasswordCommand -
-            // email mời là tương tác cần độ trễ thấp, không nên chờ chu kỳ poll của Outbox (~10s).
-            try
-            {
-                await _emailService.SendWelcomeSetPasswordEmailAsync(newUser.Email.Value, newUser.FullName, invitationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gửi email mời thiết lập mật khẩu thất bại cho UserId: {UserId}", newUser.Id);
-                // Không rollback việc tạo user - Admin có thể yêu cầu gửi lại lời mời sau (xem ghi chú bên dưới).
-            }
 
             return Result<Guid>.Success(newUser.Id);
         }

@@ -18,3 +18,9 @@ public sealed record UserPasswordChangedEvent(Guid UserId) : DomainEvent;
 public sealed record UserCreatedByAdminEvent(Guid UserId, IReadOnlyList<Guid> RoleIds) : DomainEvent;
 
 public sealed record UserRegisteredEvent(Guid UserId, string Email, string FullName, string VerificationToken) : DomainEvent;
+
+public sealed record PasswordResetRequestedEvent(Guid UserId, string Email, string FullName, string Token) : DomainEvent;
+
+public sealed record ChangeEmailRequestedEvent(Guid UserId, string PendingEmail, string FullName, string Token) : DomainEvent;
+
+public sealed record AccountInvitationRequestedEvent(Guid UserId, string Email, string FullName, string InvitationToken) : DomainEvent;

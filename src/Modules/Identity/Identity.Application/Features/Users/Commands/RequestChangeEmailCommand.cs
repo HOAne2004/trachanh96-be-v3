@@ -56,22 +56,13 @@ public class RequestChangeEmailCommandHandler : IRequestHandler<RequestChangeEma
 
         try
         {
-            // BƯỚC 1/2: chỉ lưu email mới + sinh OTP, KHÔNG đổi Email thật/Session/SecurityStamp.
-            // Tài khoản vẫn hoạt động bình thường bằng email cũ cho đến khi Confirm thành công.
             var otpToken = SecureTokenGenerator.GenerateReadableCode(6);
+            // RequestEmailChange giờ tự raise ChangeEmailRequestedEvent.
             user.RequestEmailChange(request.NewEmail, otpToken, expiryHours: 24);
 
             await _userRepository.UpdateAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            try
-            {
-                await _emailService.SendChangeEmailOtpAsync(request.NewEmail, user.FullName, otpToken);
-            }
-            catch (Exception)
-            {
-                // Người dùng có thể yêu cầu gửi lại OTP sau (gọi lại chính Command này).
-            }
 
             return Result<string>.Success(
                 "Đã gửi mã xác nhận đến email mới. Vui lòng kiểm tra hộp thư và xác nhận để hoàn tất " +
