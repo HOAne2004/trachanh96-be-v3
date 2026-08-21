@@ -70,7 +70,7 @@ builder.Services.AddSharedApplication();
 builder.Services.AddAIApplication();
 builder.Services.AddAIInfrastructure(builder.Configuration);
 
-builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration, builder.Environment);
 
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCatalogApplication();

@@ -9,18 +9,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Application.Interfaces;
+using Microsoft.Extensions.Hosting;
 using Shared.Infrastructure.Interceptors;
 using Shared.Infrastructure.Outbox;
-using Shared.Infrastructure.Services;
 
+using Microsoft.Extensions.Logging;
 namespace Identity.Infrastructure;
 
 public static class IdentityModule
 {
     public static IServiceCollection AddIdentityModule(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // 1. Đăng ký Tầng Application (MediatR, FluentValidation...)
         services.AddIdentityApplication();
@@ -39,8 +40,20 @@ public static class IdentityModule
 
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                x => x.MigrationsAssembly(typeof(IdentityDbContext).Assembly.FullName)
+                npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly(typeof(IdentityDbContext).Assembly.FullName);
+                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(15), errorCodesToAdd: null);
+                }
             ).AddInterceptors(auditInterceptor, outboxInterceptor);
+
+            // CHỈ bật ở Development: in ra chính xác câu SQL EF Core gửi đi, kèm tham số thật -
+            // để thấy trực tiếp UPDATE nào đang chạy, WHERE điều kiện gì, thay vì đoán mò.
+            if (environment.IsDevelopment())
+            {
+                options.EnableSensitiveDataLogging();
+                options.LogTo(Console.WriteLine, LogLevel.Information);
+            }
         });
 
         // 4. Đăng ký Background Job xử lý Outbox (dùng bản generic dùng chung ở Shared.Infrastructure.Outbox)
