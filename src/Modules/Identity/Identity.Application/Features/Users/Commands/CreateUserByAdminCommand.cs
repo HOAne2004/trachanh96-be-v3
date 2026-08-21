@@ -112,7 +112,7 @@ public class CreateUserByAdminCommandHandler : IRequestHandler<CreateUserByAdmin
             // Tái dùng đúng cơ chế PasswordResetToken có sẵn (không cần Domain method mới):
             // "thiết lập mật khẩu lần đầu" và "quên mật khẩu" đều là "có token hợp lệ, đặt mật khẩu mới".
             var invitationToken = SecureTokenGenerator.GenerateUrlSafeToken();
-            newUser.SetPasswordResetToken(invitationToken, expiryMinutes: InvitationExpiryDays * 24 * 60);
+            newUser.SetPasswordResetToken(invitationToken, expiryMinutes: InvitationExpiryDays * 24 * 60, raiseEvent: false);
 
             newUser.SyncRoles(roleIds);
             newUser.MarkCreatedByAdmin(roleIds);

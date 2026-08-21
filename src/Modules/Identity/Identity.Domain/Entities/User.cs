@@ -168,12 +168,16 @@ public class User : AggregateRoot<Guid>
         ClearVerificationState();
     }
 
-    public void SetPasswordResetToken(string token, int expiryMinutes = 15)
+    public void SetPasswordResetToken(string token, int expiryMinutes = 15, bool raiseEvent = true)
     {
         PasswordResetToken = token;
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
         PasswordResetAttempts = 0;
-        AddDomainEvent(new PasswordResetRequestedEvent(Id, Email.Value, FullName, token));
+
+        if (raiseEvent)
+        {
+            AddDomainEvent(new PasswordResetRequestedEvent(Id, Email.Value, FullName, token));
+        }
     }
 
     public void ResetPassword(string token, string newPasswordHash)
